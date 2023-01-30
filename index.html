@@ -1,0 +1,703 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <title>8阶光立方模拟器</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <style>
+        .tag {
+            position: absolute;
+            background-color: MidnightBlue;
+            background-color: rgba(0, 10, 40);
+            border-top-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            opacity: 0.5;
+            font-size: 4px;
+            color: aqua;
+            padding: 1px 1px 1px;
+            width: 200px;
+            height: 100%;
+            overflow:hidden;
+        }
+
+
+        p{
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .box {
+            width: 200px;
+            height: 100%;
+            /* border: 1px solid; */
+        }
+
+        .scroll-wrap {
+            max-width: 100%;
+            display: inline-block;
+            vertical-align: top;
+            overflow: hidden;
+            white-space: break-word;;
+        }
+
+        .scroll-item {
+            animation: scroll linear 10s alternate infinite;
+            float: left;
+        }
+
+        @keyframes scroll {
+            0% {
+                margin-top: 0;
+                transform: translateY(0);
+            }
+
+            10% {
+                margin-top: 0;
+                transform: translateY(0);
+            }
+
+            90% {
+                margin-top: 100%;
+                transform: translateY(-100%);
+            }
+
+            100% {
+                margin-top: 100%;
+                transform: translateY(-100%);
+            }
+        }
+
+        
+	#backgroundImage{
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		/* background: url("image/bg.jpg");  */
+        background-color: black;
+		/* z层级设置低些 避免阻挡交互*/
+		z-index: -1000;
+		/* 背景铺满，而不是重复平铺*/
+		background-size: 100%  ;
+    }
+
+    </style>
+    
+</head>
+<body>
+
+    <!-- <div class="tag" id="tag"> -->
+    <div class="tag">
+        <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
+        <div class="box">
+            <div class="scroll-wrap">
+                <div class="scroll-item">
+                    <p style="padding: 5px;margin-top: -3px;" id="photodata"></p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <div id="backgroundImage"></div>
+<!--load three.js and the mouse controls.-->
+<script src="js/three.min.js"></script>
+<script src="js/TrackballControls.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script type="text/javascript" src="js/dat.gui.js"></script>
+
+
+<script>
+    var container;
+    var camera, scene, renderer, controls;
+    var ws = 2;
+	var mesh = [];
+    var group;
+
+    var cubeSize = 8;
+    var gapSize = cubeSize * 20;    // 两个物体之间的间隔，默认160
+    var length = gapSize * 7;
+    // LED的数组，8阶有512个，标志哪个led亮，0为灭，1为亮。右手坐标系。
+    var LedArry = []; 
+    var photoArry = [];
+    var LedTime = 10;   // 0.1μs为单位
+    
+    var hexlist = [];   // 存储转化数据
+    var testindex = 0;  // 测试
+
+    // 动画播放需要的记录变量
+    var ledanimateflag = 0; // 是否启动led动画
+    var ledanimateloopflag = 0; // 是否循环播放动画
+    var ledanimatelooppauseflag = 0;    // 判断是否暂停的是循环播放
+    var videolist;   // 动画数据
+    var videlistlength = 0;    // 动画数据有多长
+    var videolistindex = 0; // 动画索引，当前读取到第几个了
+    var startTime = 0;  // 动画启动的时间
+    var currentTime = 0;    // 此刻的时间
+    var videoTime = 0;  // 一个场景需要持续的时间0.1s单位 100ms
+    var ledrotateflag = 0; // 是否启动旋转
+
+    
+
+    init();
+    animate();
+
+    function init() {
+        LedArry = new Array(512).fill(0);   // 初始化512个led
+
+        renderer = new THREE.WebGLRenderer( {alpha:true,antialias: true,} );
+        // renderer.setClearColor(0x000000);   // 背景
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        //set the scene and camera
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(2000, 2000, 2000);
+        camera.lookAt(0, 0, 0);
+        // var orbit = new THREE.OrbitControls(camera);
+
+        //controls
+        controls = new THREE.TrackballControls(camera, renderer.domElement);
+        controls.minDistance = 200;
+        controls.maxDistance = 4500;
+
+        // 创建组，继承自Object3D
+        // 为了整体控制，如旋转
+        group = new THREE.Group() // new THREE.Object3D
+
+        // 在屏幕上显示坐标轴
+        var axes = new THREE.AxisHelper(100);
+        scene.add(axes);
+        group.add(axes);
+
+        //lights
+        scene.add(new THREE.AmbientLight(0x222222));
+        var light = new THREE.PointLight(0xffffff);
+        light.position.copy(camera.position);
+        scene.add(light);
+
+        initLED();
+        initGround();
+
+        // 初始化LED
+        function initLED() {
+            for (var y = 0; y < cubeSize; y++) {
+                for (var z = 0; z < cubeSize; z++) {
+                    for (var x = 0; x < cubeSize; x++) {
+                        // var cube = new THREE.Mesh(new THREE.CubeGeometry(20, 20, 20), new THREE.MeshBasicMaterial({
+                        //     color: 0xC0C0C0
+                        // }));
+                        var sphereGeometry = new THREE.SphereGeometry(20, 20, 20)
+                        // sphereGeometry.opacity = 0.1
+                        var cube = new THREE.Mesh(sphereGeometry, new THREE.MeshBasicMaterial({
+                            color: 0xC0C0C0
+                        }));
+                        cube.material.opacity =0.7  // 修改透明度
+                        cube.material.transparent = true;
+                        cube.position.set(x * (gapSize), y * (gapSize), z * (gapSize)); //sort out gaps
+                        // index = x + z*7 + y * 64;
+                        cube.name = x + z*cubeSize + y*cubeSize*cubeSize + "";
+                        // console.log(cube.name)
+                        scene.add(cube); //add shape to scene
+                        mesh.push(cube);
+                        group.add(cube);
+                        name++;
+                    }
+
+                }
+            }
+        }
+
+        // 绘制路网
+        function initGround() {
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0, -20, 0));
+            geometry.vertices.push(new THREE.Vector3(length, -20, 0));
+
+            for (var i = 0; i <= length / ws; i++) {
+                var material = new THREE.LineBasicMaterial({
+                    color: 0x808080
+                });
+                var line = new THREE.Line(geometry, material);
+                line.position.z = i * ws;
+                scene.add(line);
+                group.add(line);
+
+                var line = new THREE.Line(geometry, material);
+                line.position.x = i * ws;
+                line.position.z = length;
+                line.rotation.y = 90 * Math.PI / 180;
+                scene.add(line);
+                group.add(line);
+            }
+        }
+
+        
+        scene.add(group);
+        
+        // 添加点击事件，监控点击led
+        document.addEventListener('click', onDocumentMouseDown, false);
+        
+        // 显示文本数据
+        function showmessage(str){
+            var obj = document.getElementById("photodata");
+            obj.innerHTML= str; 
+        }
+
+        function saveFile() {
+            var obj = document.getElementById("photodata");
+            var data = obj.innerHTML;
+            var name = 'cube.txt';
+            exportRaw(data, name);
+        }
+
+        function exportRaw(data, name) {
+            var urlObject = window.URL || window.webkitURL || window;
+            var export_blob = new Blob([data]);
+            var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+            save_link.href = urlObject.createObjectURL(export_blob);
+            save_link.download = name;
+            save_link.click();
+        }
+
+
+        // 将呈现器的输出添加到HTML元素
+		// document.getElementById("dom").appendChild(renderer.domElement);
+        // 使用GUI调试库
+        var guicontrols = new function () {
+            // this.numberOfObjects = scene.children.length;
+            this.保持时间 = LedTime;
+            // this.测试索引 = testindex;
+            // 随机生成一个立方体
+            this.拍摄 = function () {
+                // LedTime LedArry
+                hexlist.push(LedTime)
+                var total = 0;
+                var index = 7;
+                for(var i=0;i<LedArry.length;i++){
+                    total += LedArry[i] * Math.pow(2, index);
+                    index -= 1;
+                    if(index<0)
+                    {
+                        hexlist.push(total);
+                        index = 7;
+                        total = 0;
+                    }
+                }
+                showmessage(hexlist);
+
+            };
+
+            this.撤回 = function(){
+
+                try{
+                    for(var i=0; i<65; i++)
+                    {
+                        hexlist.pop()
+                    }
+                }catch{
+                    
+                }
+
+                showmessage(hexlist);
+
+            };
+
+            this.导出 = function(){
+                saveFile() 
+            };
+
+            this.导入 = function(){
+            
+            };
+
+            this.获取拍摄数据 = function(){
+
+            };
+
+            this.清空拍摄数据 = function(){
+
+                hexlist.splice(0);
+                showmessage(hexlist);
+            };
+
+
+            this.播放 = function(){
+                // 播放前先熄灭所有led
+                ledDown();
+
+                var obj = document.getElementById("photodata");
+                var videodata = obj.innerHTML;
+                videolist = videodata.split(",")    // 保存动画数据
+                videlistlength  = videolist.length;
+                // console.log(videolist.length)
+
+                ledanimateflag = 1; // 启动动画
+            };
+
+            this.循环播放 = function(){
+                // 播放前先熄灭所有led
+                ledDown();
+
+                // 防止此时处于“播放状态”
+                // 归零所有变量
+                initledanimate();
+
+                var obj = document.getElementById("photodata");
+                var videodata = obj.innerHTML;
+                videolist = videodata.split(",")    // 保存动画数据
+                videlistlength  = videolist.length;
+
+                ledanimateloopflag = 1; // 启用循环播放
+            }
+
+            this.暂停 = function(){
+                ledanimateflag = 0; // 暂停启动动画
+                ledanimateloopflag = 0; // 暂停循环播放
+                ledanimatelooppauseflag = 1;    // 暂停的是循环播放
+            };
+
+            this.继续 = function(){
+                if(videlistlength != 0 && ledanimatelooppauseflag == 0){  // 存在数据且暂停的不是循环播放
+                    ledanimateflag = 1; // 启动动画
+                }else if(videlistlength != 0)   // 存在数据，暂停的是循环播放
+                {
+                    ledanimateloopflag = 1;
+                    ledanimatelooppauseflag = 0;    // 循环播放未处于暂停状态
+                }
+            };
+
+            this.停止 = function(){
+                ledanimateflag = 0; // 启动动画
+                ledanimateloopflag = 0; // 循环播放也关闭
+                ledanimatelooppauseflag = 0;    // 循环播放未处于暂停状态
+                // 归零所有变量
+                initledanimate();
+                // 全灭
+                ledDown();
+
+            };
+
+            this.旋转 = function(){
+                ledrotateflag = 1; // 启动旋转
+            };
+
+            this.停止旋转 = function(){
+                ledrotateflag = 0; // 停止旋转
+
+            };
+
+
+
+            this.测试 = function(){
+                // console.log(scene.children)
+                var object = scene.getObjectByName(testindex + "");
+                console.log(object)
+                object.material.color.set("#ff0000"); // 点亮
+                
+            };
+
+            this.全亮 = function(){
+                // 通过上面的表格可得出使用getChildrenByName(name)函数可实现,如下:
+                for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
+                    // console.log(i + "")
+                    var object = scene.getObjectByName(i + "");
+                    // console.log(object)
+                    object.material.color.set("#ff0000"); // 点亮
+                    LedArry[i] = 1;    // 改为亮的状态
+
+                }
+            };
+
+            this.全灭 = function(){
+                // console.log(scene.children)
+                ledDown();
+            };
+
+            this.反转 = function(){
+                for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
+                    var object = scene.getObjectByName(i + "");
+                    if (LedArry[i] == 0)  // 当前LED是灭的状态
+                    {
+                        object.material.color.set("#ff0000"); // 点亮
+                        LedArry[i] = 1;    // 改为亮的状态
+                    }else
+                    {
+                        object.material.color.set("#C0C0C0");   // 熄灭
+                        LedArry[i] = 0;
+                    }
+                }
+            };
+
+        };
+        var gui = new dat.GUI();
+        // 添加事件
+        // gui.add(guicontrols, '测试');
+        gui.add(guicontrols, '拍摄');
+        gui.add(guicontrols, '撤回');
+        // gui.add(guicontrols, '获取拍摄数据');
+        gui.add(guicontrols, '清空拍摄数据');
+        gui.add(guicontrols, '导出');
+        // gui.add(guicontrols, '导入');
+        var folder = gui.addFolder('动画');
+        folder.add(guicontrols, '循环播放');
+        folder.add(guicontrols, '播放');
+        folder.add(guicontrols, '暂停');
+        folder.add(guicontrols, '继续');
+        folder.add(guicontrols, '停止');
+        folder.add(guicontrols, '旋转');
+        folder.add(guicontrols, '停止旋转');
+        folder.open();
+        // gui.add(guicontrols, '播放');
+        var folder2 = gui.addFolder('快捷操作');
+        folder2.add(guicontrols, '全灭');
+        folder2.add(guicontrols, '全亮');
+        folder2.add(guicontrols, '反转');
+        folder2.open()
+        // gui.add(guicontrols, '测试');
+        // gui.add(guicontrols, '步长').step(1); // 增长的步长
+        var time = gui.add(guicontrols, '保持时间', 1, 255).step(1); // 最大、最小值
+        // var test = gui.add(guicontrols, '测试索引', 0, 511).step(1); // 最大、最小值
+
+        time.onFinishChange(function(value) {
+            LedTime = value;
+            // console.log(LedTime);
+        });
+
+        // test.onFinishChange(function(value) {
+        //     testindex = value;
+        //     console.log(testindex);
+        // });
+        
+
+        // 熄灭所有led，并将led数组归零
+        function ledDown(){
+            for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
+                    var object = scene.getObjectByName(i + "");
+                    object.material.color.set("#C0C0C0"); // 熄灭
+                    LedArry[i] = 0;
+
+                }
+        }
+
+        // 点击led灯改变灯的状态
+        function onDocumentMouseDown(event) {
+            // 点击屏幕创建一个向量
+            var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window
+                .innerHeight) * 2 + 1, 0.5);
+            vector = vector.unproject(camera); // 将屏幕的坐标转换成三维场景中的坐标
+            var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObjects(mesh, true);
+            // console.log(mesh)
+            if (intersects.length > 0) {
+                // console.log(intersects[0].object.position)  // 物体的世界坐标，右手坐标系
+                var index = LedIndex(intersects[0].object.position.x, intersects[0].object.position.y, intersects[0].object.position.z) 
+                if (LedArry[index] == 0)  // 当前LED是灭的状态
+                {
+                    intersects[0].object.material.color.set("#ff0000"); // 点亮
+                    LedArry[index] = 1;    // 改为亮的状态
+                }else
+                {
+                    intersects[0].object.material.color.set("#C0C0C0");   // 熄灭
+                    LedArry[index] = 0;
+                }
+
+            }
+        }
+
+        // 传入世界坐标，变成索引，右手坐标系。改变led的亮灭。
+        function LedIndex(x, y, z){
+            // 转换坐标，将坐标变为数组下标
+            var index = transformIndex(x, y, z);
+            // console.log(LedColor)
+            // console.log(LedArry);
+            return index;    // 返回led当前颜色
+        }
+
+        // 512个，分为8片，从下往上依次为0-7片，每片64个。
+        // 顺序为：从左往右，从里往外。某一片，从里往外依次为第0-7行，从左往右依次为第0-7个
+        // (x,y,z)->数组下标：所以(0,0,0)->0,(1,0,0)->1,···,(7,0,0)->7。
+        // (0,0,1)->7，···(0,0,7)->15
+        // (0,1,0)->64
+        // 转换坐标，将坐标变为数组下标
+        function transformIndex(x, y, z){
+            var index = 0;
+            x = x / gapSize;
+            y = y / gapSize;
+            z = z / gapSize;
+
+            console.log("x:" + x + " y:" + y + " z:" + z)
+            index = x + z * cubeSize + y * cubeSize * cubeSize;
+            // console.log(index);
+
+            return index
+        }
+
+        				
+        // 创建一个球形几何体
+        function createSphereGeometryLambertMaterial() {
+            // 创建一个球体
+            var sphereGeometry = new THREE.SphereGeometry(4, 20, 20);
+            var sphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x7777ff,
+                wireframe: true // 线性
+            });
+            var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            // 位置范围
+            sphere.position.x = 20;
+            sphere.position.y = 4;
+            sphere.position.z = 2;
+            return sphere;
+        }
+
+        // 创建一个平面
+        function createPlaneGeometryBasicMaterial() {
+            // 创建地平面并设置大小
+            var planeGeometry = new THREE.PlaneGeometry(1000, 1000);
+            var planeMaterial = new THREE.MeshBasicMaterial({
+                color: 0xcccccc
+            });
+            var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    
+            // 设置平面位置并旋转
+            plane.rotation.x = -0.5 * Math.PI;
+            plane.position.x = 0;
+            plane.position.y = 0;
+            plane.position.z = 0;
+            return plane;
+        }
+
+
+    }
+
+
+    function divRender() {
+        //计算三维坐标对应的屏幕坐标
+        var position = new THREE.Vector3(20, 30, 50);
+        var windowPosition = transPosition(position);
+        var left = windowPosition.x;
+        var top = windowPosition.y;
+        //设置div屏幕位置
+        let div = document.getElementById('tag');
+        div.style.display = "";
+        div.style.left = left + 'px';
+        div.style.top = top + 'px';
+    }
+    function transPosition(position) {
+        let world_vector = new THREE.Vector3(position.x, position.y, position.z);
+        let vector = world_vector.project(camera);
+        let halfWidth = window.innerWidth / 2,
+            halfHeight = window.innerHeight / 2;
+        return {
+            x: Math.round(vector.x * halfWidth + halfWidth),
+            y: Math.round(-vector.y * halfHeight + halfHeight)
+        };
+    }
+
+
+    function initledanimate(){
+        // 归零所有变量
+        ledanimateflag = 0; // 不用播放动画了
+        videlistlength = 0;    // 动画数据有多长
+        videolistindex = 0; // 动画索引，当前读取到第几个了
+        startTime = 0;  // 动画启动的时间
+        currentTime = 0;    // 此刻的时间
+        videoTime = 0;  // 一个场景需要持续的时间0.1s单位 100ms
+    }
+
+    // led动画场景
+    function ledanimate(){
+        // 播放动画数据
+        var index = 0;  // 代表第几个led
+        // 每次读一个场景，65个数据，（1个时间，64个为led状态）
+        for(var i=videolistindex;i<videolistindex + 65;i++){
+            // 第一个为时间,后面64个为led状态
+            if(i%65 == 0)
+            {
+                videoTime = videolist[i] * 100;   // 单位为0.1s
+                // index = 0;
+                console.log("等待")
+                console.log(videolist)
+                // sleep(1000);
+            }else{
+                for(let offset = 1; offset <= 8; offset++) {
+                    // console.log(index)
+                    let t = (videolist[i] >> (8 - offset)) & 0b00000001
+                    // var object = scene.getObjectByName(index + "");
+                    // console.log(object)
+                    if(t == 1)  // 需要点亮
+                    {
+                        LedArry[index] = 1;    // 改为亮的状态
+                        var object = scene.getObjectByName(index + "");
+                        // console.log(object)
+                        object.material.color.set("#ff0000"); // 点亮
+                    }else
+                    {
+                        LedArry[index] = 0;    // 熄灭的状态
+                        var object = scene.getObjectByName(index + "");
+                        object.material.color.set("#C0C0C0"); // 熄灭
+                    }
+                    index += 1;
+                }
+            }
+
+        }
+
+        videolistindex += 65;   // 记录当前动画索引
+
+        // 记录当前时间
+        startTime = new Date().getTime();   // 得到毫秒数
+
+        if(videolistindex >= videlistlength)
+        {
+            
+
+            if(ledanimateloopflag == 0){    // 未启用了循环播放
+                // 归零所有变量
+                initledanimate();
+            }else
+            {
+                videolistindex = 0; // 动画索引回到最开始位置
+            }
+
+            //播放完先熄灭所有led
+            // for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
+            //     var object = scene.getObjectByName(i + "");
+            //     object.material.color.set("#C0C0C0"); // 熄灭
+            //     LedArry[i] = 0;
+            // }
+        }
+        
+    }
+
+    function animate() {
+        if(ledanimateflag == 1) // 执行动画数据
+        {
+            currentTime = new Date().getTime();
+            if(currentTime >= startTime + videoTime)// 当前时间已经超过场景执行的预期的时间了
+            {
+                ledanimate();   // 进入动画
+            }
+        }
+
+        if(ledanimateloopflag == 1) // 循环播放动画数据
+        {
+            currentTime = new Date().getTime();
+            if(currentTime >= startTime + videoTime)// 当前时间已经超过场景执行的预期的时间了
+            {
+                ledanimate();   // 进入动画
+            }
+        }
+        // console.log("hi")
+        requestAnimationFrame(animate);
+        if(ledrotateflag == 1)
+        {
+            // camera.position.x += 5;
+            group.rotateY(0.01);
+        }
+        // orbit.update();
+        controls.update();
+        // divRender();
+        renderer.render(scene, camera);
+    }
+</script>
+</body>
+</html>
