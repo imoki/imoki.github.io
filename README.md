@@ -1,1 +1,4 @@
-# imoki.github.io
+# imoki.github.io  
+
+8阶光立方前端模拟器，仅用于展示  
+不包含后端程序，因此不具备高级功能  
