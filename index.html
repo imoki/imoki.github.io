@@ -86,6 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
+        <span style="color:white;font-size: 10px;padding: 5px">v1.1.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -94,9 +95,13 @@
                 </div>
             </div>
         </div>
+        <!-- <input type="file" name="file" onchange="inputclick(this)" id="input-file"  style="display:none" > -->
         
     </div>
-    <div id="backgroundImage"></div>
+    
+    <div id="backgroundImage">
+        
+    </div>
 <!--load three.js and the mouse controls.-->
 <script src="js/three.min.js"></script>
 <script src="js/TrackballControls.js"></script>
@@ -138,6 +143,27 @@
 
     init();
     animate();
+
+
+    // 显示文本数据
+    function showmessage(str){
+        var obj = document.getElementById("photodata");
+        obj.innerHTML= str; 
+    }
+
+    function inputclick(obj) {
+        // console.log(obj)
+        var file = obj.files[0];
+        console.log(file)
+        var reader = new FileReader();
+        reader.readAsText(file,'UTF-8');
+        reader.onload = function (e) {    //成功读取文件
+            hexlist.splice(0);
+            console.log(e.target.result)
+            let cubedata = e.target.result
+            showmessage(e.target.result);
+        };
+    }
 
     function init() {
         LedArry = new Array(512).fill(0);   // 初始化512个led
@@ -236,11 +262,7 @@
         // 添加点击事件，监控点击led
         document.addEventListener('click', onDocumentMouseDown, false);
         
-        // 显示文本数据
-        function showmessage(str){
-            var obj = document.getElementById("photodata");
-            obj.innerHTML= str; 
-        }
+
 
         function saveFile() {
             var obj = document.getElementById("photodata");
@@ -306,7 +328,16 @@
             };
 
             this.导入 = function(){
-            
+                // document.querySelector("#input-file").click();
+                var inputObj=document.createElement('input')
+                // inputObj.setAttribute('id','_ef');
+                inputObj.setAttribute('type','file');
+                inputObj.setAttribute("style",'display:none');
+                inputObj.setAttribute("onChange",'inputclick(this)');
+                // document.body.appendChild(inputObj);
+                inputObj.click();
+                // console.log(inputObj.value)
+                // inputclick(inputObj.value)
             };
 
             this.获取拍摄数据 = function(){
@@ -436,7 +467,12 @@
         // gui.add(guicontrols, '获取拍摄数据');
         gui.add(guicontrols, '清空拍摄数据');
         gui.add(guicontrols, '导出');
-        // gui.add(guicontrols, '导入');
+        gui.add(guicontrols, '导入');
+        var folder2 = gui.addFolder('快捷操作');
+        folder2.add(guicontrols, '全灭');
+        folder2.add(guicontrols, '全亮');
+        folder2.add(guicontrols, '反转');
+        folder2.open()
         var folder = gui.addFolder('动画');
         folder.add(guicontrols, '循环播放');
         folder.add(guicontrols, '播放');
@@ -447,11 +483,7 @@
         folder.add(guicontrols, '停止旋转');
         folder.open();
         // gui.add(guicontrols, '播放');
-        var folder2 = gui.addFolder('快捷操作');
-        folder2.add(guicontrols, '全灭');
-        folder2.add(guicontrols, '全亮');
-        folder2.add(guicontrols, '反转');
-        folder2.open()
+
         // gui.add(guicontrols, '测试');
         // gui.add(guicontrols, '步长').step(1); // 增长的步长
         var time = gui.add(guicontrols, '保持时间', 1, 255).step(1); // 最大、最小值
@@ -615,7 +647,7 @@
                 videoTime = videolist[i] * 100;   // 单位为0.1s
                 // index = 0;
                 console.log("等待")
-                console.log(videolist)
+                // console.log(videolist)
                 // sleep(1000);
             }else{
                 for(let offset = 1; offset <= 8; offset++) {
