@@ -86,7 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.1.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v1.2.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -123,6 +123,8 @@
     var LedArry = []; 
     var photoArry = [];
     var LedTime = 10;   // 0.1μs为单位
+    var ledupnum = 0;
+    var leddownnum = 0;
     
     var hexlist = [];   // 存储转化数据
     var testindex = 0;  // 测试
@@ -263,7 +265,6 @@
         document.addEventListener('click', onDocumentMouseDown, false);
         
 
-
         function saveFile() {
             var obj = document.getElementById("photodata");
             var data = obj.innerHTML;
@@ -287,6 +288,8 @@
         var guicontrols = new function () {
             // this.numberOfObjects = scene.children.length;
             this.保持时间 = LedTime;
+            this.亮 = ledupnum;
+            this.灭 = leddownnum;
             // this.测试索引 = testindex;
             // 随机生成一个立方体
             this.拍摄 = function () {
@@ -427,7 +430,6 @@
             };
 
             this.全亮 = function(){
-                // 通过上面的表格可得出使用getChildrenByName(name)函数可实现,如下:
                 for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
                     // console.log(i + "")
                     var object = scene.getObjectByName(i + "");
@@ -471,6 +473,8 @@
         var folder2 = gui.addFolder('快捷操作');
         folder2.add(guicontrols, '全灭');
         folder2.add(guicontrols, '全亮');
+        var leddown= folder2.add(guicontrols, '灭');
+        var ledup= folder2.add(guicontrols, '亮');
         folder2.add(guicontrols, '反转');
         folder2.open()
         var folder = gui.addFolder('动画');
@@ -494,6 +498,56 @@
             // console.log(LedTime);
         });
 
+        leddown.onFinishChange(function(value) {
+            leddownnum = value;
+            console.log(leddownnum);
+            // (xyz)
+            // 这里需要输入世界坐标
+            let x = Math.trunc(leddownnum /100);
+            let y = Math.trunc((leddownnum %100)/10);
+            let z = Math.trunc(leddownnum % 10);
+            if(formatNum(x) != -1 && formatNum(y) != -1 && formatNum(z) != -1)
+            {
+                // 世界坐标会转化为led数组下标
+                var index = LedIndexOrigin(x, y, z) 
+                var object = scene.getObjectByName(index + "");
+                // console.log(object)
+                object.material.color.set("#C0C0C0"); // 熄灭
+                LedArry[index] = 0;    // 改为灭的状态
+            }
+        });
+
+        ledup.onFinishChange(function(value) {
+            ledupnum = value;
+            console.log(ledupnum);
+            // (xyz)
+            // 这里需要输入世界坐标
+            let x = Math.trunc(ledupnum /100);  // Math.trunc()方法去除数字的小数部分，保留整数部分。
+            let y = Math.trunc((ledupnum %100) / 10); 
+            let z = Math.trunc(ledupnum % 10);
+
+            // 世界坐标会转化为led数组下标
+            if(formatNum(x) != -1 && formatNum(y) != -1 && formatNum(z) != -1)
+            {
+                var index = LedIndexOrigin(x, y, z) 
+                var object = scene.getObjectByName(index + "");
+                // console.log(object)
+                object.material.color.set("#ff0000"); // 点亮
+                LedArry[index] = 1;    // 改为亮的状态
+            }
+        });
+
+        // 格式化坐标保证不超出范围
+        function formatNum(num){
+            if(num<0 || num >cubeSize-1)
+            {
+                return -1
+            }else
+            {
+                return num
+            }
+        }
+
         // test.onFinishChange(function(value) {
         //     testindex = value;
         //     console.log(testindex);
@@ -506,8 +560,7 @@
                     var object = scene.getObjectByName(i + "");
                     object.material.color.set("#C0C0C0"); // 熄灭
                     LedArry[i] = 0;
-
-                }
+            }
         }
 
         // 点击led灯改变灯的状态
@@ -535,7 +588,7 @@
             }
         }
 
-        // 传入世界坐标，变成索引，右手坐标系。改变led的亮灭。
+        // 传入世界坐标(带有距离的)，变成索引，右手坐标系。改变led的亮灭。
         function LedIndex(x, y, z){
             // 转换坐标，将坐标变为数组下标
             var index = transformIndex(x, y, z);
@@ -555,6 +608,25 @@
             x = x / gapSize;
             y = y / gapSize;
             z = z / gapSize;
+
+            console.log("x:" + x + " y:" + y + " z:" + z)
+            index = x + z * cubeSize + y * cubeSize * cubeSize;
+            // console.log(index);
+
+            return index
+        }
+
+        // 传入世界坐标(未有距离的，如000)，变成索引，右手坐标系。改变led的亮灭。
+        function LedIndexOrigin(x, y, z){
+            // 转换坐标，将坐标变为数组下标
+            var index = transformIndexOrigin(x, y, z);
+            // console.log(LedColor)
+            // console.log(LedArry);
+            return index;    // 返回led当前颜色
+        }
+
+        function transformIndexOrigin(x, y, z){
+            var index = 0;
 
             console.log("x:" + x + " y:" + y + " z:" + z)
             index = x + z * cubeSize + y * cubeSize * cubeSize;
