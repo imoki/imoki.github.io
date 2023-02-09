@@ -86,7 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.4.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v1.4.1</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -632,22 +632,22 @@
 
         // 块操作
         blockChoice.onFinishChange(function(value) {
-            blockChoiceNum = value;
-            console.log(blockChoiceNum);
+            blockChoiceNum = parseInt(value);
+            // console.log(blockChoiceNum);
         });
 
         blockShow.onFinishChange(function(value) {
             blockStatus = value;
-            console.log(blockStatus);
+            // console.log(blockStatus);
         });
 
         block.onFinishChange(function(value) {
             blockNum = value;   // 序号
             console.log(blockNum);
             // 这里需要输入世界坐标
-            let x = Math.trunc(blockNum /100);  // Math.trunc()方法去除数字的小数部分，保留整数部分。
-            let y = Math.trunc((blockNum %100) / 10); 
-            let z = Math.trunc(blockNum % 10);
+            let x = parseInt(Math.trunc(blockNum /100));  // Math.trunc()方法去除数字的小数部分，保留整数部分。
+            let y = parseInt(Math.trunc((blockNum %100) / 10)); 
+            let z = parseInt(Math.trunc(blockNum % 10));
             for(let i = x; i<x+blockChoiceNum; i++)
             {
                 for(let j = y; j<y+blockChoiceNum; j++)
