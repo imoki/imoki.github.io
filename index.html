@@ -86,7 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.4.1</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v1.4.2</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -159,6 +159,7 @@
         obj.innerHTML= str; 
     }
 
+    // 导入动画数据
     function inputclick(obj) {
         // console.log(obj)
         var file = obj.files[0];
@@ -167,9 +168,10 @@
         reader.readAsText(file,'UTF-8');
         reader.onload = function (e) {    //成功读取文件
             hexlist.splice(0);
-            console.log(e.target.result)
+            // console.log(typeof e.target.result)
             let cubedata = e.target.result
             showmessage(e.target.result);
+            hexlist.push(e.target.result)
         };
     }
 
