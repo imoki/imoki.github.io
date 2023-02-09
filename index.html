@@ -86,7 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.3.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v1.4.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -128,6 +128,9 @@
     var floorChoiceNum = 0; // 片选， 默认0 xz平面
     var floorStatus = true;    // 默认亮平面 
     var floornum = 0;   // 亮哪一层，默认0
+    var blockChoiceNum = 2; // 块选，是几阶，默认为2，即点亮一个led
+    var blockStatus = true;   // 是否亮块，默认亮
+    var blockNum = 0;   // 块坐标默认000
     
     var hexlist = [];   // 存储转化数据
     var testindex = 0;  // 测试
@@ -296,6 +299,10 @@
             this.片选 = floorChoiceNum;
             this.片亮 = floorStatus;
             this.片层 = floornum;
+
+            this.块选 = blockChoiceNum;
+            this.块亮 = blockStatus;
+            this.块坐标 = blockNum;
             // this.测试索引 = testindex;
             // 随机生成一个立方体
             this.拍摄 = function () {
@@ -358,9 +365,6 @@
                 hexlist.splice(0);
                 showmessage(hexlist);
             };
-
-            
-            
 
 
             this.播放 = function(){
@@ -482,6 +486,7 @@
         var folder2 = gui.addFolder('快捷操作');
         folder2.add(guicontrols, '全灭');
         folder2.add(guicontrols, '全亮');
+        folder2.add(guicontrols, '反转');
         var leddown= folder2.add(guicontrols, '灭');
         var ledup= folder2.add(guicontrols, '亮');
         
@@ -491,7 +496,14 @@
         var floor = folder3.add(guicontrols, '片层');
         folder3.open()
 
-        folder2.add(guicontrols, '反转');
+        var folder4 = folder2.addFolder('块操作');
+        var blockChoice = folder4.add(guicontrols, '块选', { 一阶: 1, 二阶: 2, 三阶: 3, 四阶: 4,
+            五阶: 5, 六阶: 6, 七阶: 7, 八阶: 8 });
+        var blockShow = folder4.add(guicontrols, '块亮');
+        var block = folder4.add(guicontrols, '块坐标');
+        // folder4.open()
+
+        
         folder2.open()
         var folder = gui.addFolder('动画');
         folder.add(guicontrols, '循环播放');
@@ -555,6 +567,7 @@
             }
         });
 
+        // 片操作
         floorShow.onFinishChange(function(value) {
             floorStatus = value;
             console.log(floorStatus);
@@ -617,6 +630,37 @@
 
         });
 
+        // 块操作
+        blockChoice.onFinishChange(function(value) {
+            blockChoiceNum = value;
+            console.log(blockChoiceNum);
+        });
+
+        blockShow.onFinishChange(function(value) {
+            blockStatus = value;
+            console.log(blockStatus);
+        });
+
+        block.onFinishChange(function(value) {
+            blockNum = value;   // 序号
+            console.log(blockNum);
+            // 这里需要输入世界坐标
+            let x = Math.trunc(blockNum /100);  // Math.trunc()方法去除数字的小数部分，保留整数部分。
+            let y = Math.trunc((blockNum %100) / 10); 
+            let z = Math.trunc(blockNum % 10);
+            for(let i = x; i<x+blockChoiceNum; i++)
+            {
+                for(let j = y; j<y+blockChoiceNum; j++)
+                {
+                    for(let k = z; k<z+blockChoiceNum; k++)
+                    {
+                        // console.log(i, j, k)
+                        ledCoordinateStatus(i, j, k, blockStatus);
+                    }
+                }
+            }
+            
+        });
 
         // test.onFinishChange(function(value) {
         //     testindex = value;
