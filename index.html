@@ -86,7 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.2.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v1.3.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -125,6 +125,9 @@
     var LedTime = 10;   // 0.1μs为单位
     var ledupnum = 0;
     var leddownnum = 0;
+    var floorChoiceNum = 0; // 片选， 默认0 xz平面
+    var floorStatus = true;    // 默认亮平面 
+    var floornum = 0;   // 亮哪一层，默认0
     
     var hexlist = [];   // 存储转化数据
     var testindex = 0;  // 测试
@@ -290,6 +293,9 @@
             this.保持时间 = LedTime;
             this.亮 = ledupnum;
             this.灭 = leddownnum;
+            this.片选 = floorChoiceNum;
+            this.片亮 = floorStatus;
+            this.片层 = floornum;
             // this.测试索引 = testindex;
             // 随机生成一个立方体
             this.拍摄 = function () {
@@ -352,6 +358,9 @@
                 hexlist.splice(0);
                 showmessage(hexlist);
             };
+
+            
+            
 
 
             this.播放 = function(){
@@ -475,6 +484,13 @@
         folder2.add(guicontrols, '全亮');
         var leddown= folder2.add(guicontrols, '灭');
         var ledup= folder2.add(guicontrols, '亮');
+        
+        var folder3 = folder2.addFolder('片操作');
+        var floorChoice = folder3.add(guicontrols, '片选', { XZ: 0, XY: 1, YZ: 2 });
+        var floorShow = folder3.add(guicontrols, '片亮');
+        var floor = folder3.add(guicontrols, '片层');
+        folder3.open()
+
         folder2.add(guicontrols, '反转');
         folder2.open()
         var folder = gui.addFolder('动画');
@@ -498,6 +514,7 @@
             // console.log(LedTime);
         });
 
+        // 某个led灭
         leddown.onFinishChange(function(value) {
             leddownnum = value;
             console.log(leddownnum);
@@ -517,6 +534,7 @@
             }
         });
 
+        // 某个led亮
         ledup.onFinishChange(function(value) {
             ledupnum = value;
             console.log(ledupnum);
@@ -537,16 +555,68 @@
             }
         });
 
-        // 格式化坐标保证不超出范围
-        function formatNum(num){
-            if(num<0 || num >cubeSize-1)
+        floorShow.onFinishChange(function(value) {
+            floorStatus = value;
+            console.log(floorStatus);
+        });
+
+        floorChoice.onFinishChange(function(value) {
+            floorChoiceNum = value;
+            console.log(floorChoiceNum);
+        });
+
+        floor.onFinishChange(function(value) {
+            floornum = value;   // 序号
+            console.log(floornum);
+            if(floornum >=0 && floornum <=7)    // 保证输入的范围在正确区间
             {
-                return -1
-            }else
-            {
-                return num
+                if(floorChoiceNum == 0)// 亮xz平面
+                {
+                    // y=0, x和z依次从0到7
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    y = floornum;
+                    for(x=0; x<=7; x++){
+                        for(z=0; z<=7; z++){
+                            // 根据世界坐标来选择是否亮灭某个led
+                            ledCoordinateStatus(x, y, z, floorStatus);
+                        }
+                    } 
+
+                }else if(floorChoiceNum == 1)// 亮xy平面
+                {
+                    // z=0, x和y依次从0到7
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    z = floornum;
+                    for(x=0; x<=7; x++){
+                        for(y=0; y<=7; y++){
+                            // 根据世界坐标来选择是否亮灭某个led
+                            ledCoordinateStatus(x, y, z, floorStatus);
+                        }
+                    } 
+
+                }else   // 亮yz平面
+                {
+                    // x=0, y和z依次从0到7
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    x = floornum;
+                    for(y=0; y<=7; y++){
+                        for(z=0; z<=7; z++){
+                            // 根据世界坐标来选择是否亮灭某个led
+                            ledCoordinateStatus(x, y, z, floorStatus);
+                        }
+                    } 
+                }
+                
             }
-        }
+
+        });
+
 
         // test.onFinishChange(function(value) {
         //     testindex = value;
@@ -633,6 +703,37 @@
             // console.log(index);
 
             return index
+        }
+
+        // 格式化坐标保证不超出范围
+        function formatNum(num){
+            if(num<0 || num >cubeSize-1)
+            {
+                return -1
+            }else
+            {
+                return num
+            }
+        }
+
+        // 根据世界坐标来选择是否亮灭某个led
+        function ledCoordinateStatus(x, y, z, status){
+            // 世界坐标会转化为led数组下标
+            if(formatNum(x) != -1 && formatNum(y) != -1 && formatNum(z) != -1)
+            {
+                var index = LedIndexOrigin(x, y, z) 
+                var object = scene.getObjectByName(index + "");
+                if(status){ // 亮
+                    // console.log(object)
+                    object.material.color.set("#ff0000"); // 点亮
+                    LedArry[index] = 1;    // 改为亮的状态
+                }else{  // 灭
+                    // console.log(object)
+                    object.material.color.set("#C0C0C0"); // 熄灭
+                    LedArry[index] = 0;    // 改为灭的状态
+                }
+                
+            }
         }
 
         				
