@@ -86,7 +86,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.4.2</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v1.5.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -128,7 +128,10 @@
     var floorChoiceNum = 0; // 片选， 默认0 xz平面
     var floorStatus = true;    // 默认亮平面 
     var floornum = 0;   // 亮哪一层，默认0
-    var blockChoiceNum = 2; // 块选，是几阶，默认为2，即点亮一个led
+    var ringChoiceNum = 2; // 环阶， 结合片选，默认，变长为2，4，6，8
+    // var ringStatus = true;    // 默认亮平面 
+    var ringNum = 0;   // 亮哪一环，默认0，xz平面的环
+    var blockChoiceNum = 2; // 块选，块阶，是几阶，默认为2，即点亮一个led
     var blockStatus = true;   // 是否亮块，默认亮
     var blockNum = 0;   // 块坐标默认000
     
@@ -302,7 +305,10 @@
             this.片亮 = floorStatus;
             this.片层 = floornum;
 
-            this.块选 = blockChoiceNum;
+            this.环阶 = ringChoiceNum;
+            this.环层 = ringNum;
+
+            this.块阶 = blockChoiceNum;
             this.块亮 = blockStatus;
             this.块坐标 = blockNum;
             // this.测试索引 = testindex;
@@ -496,10 +502,14 @@
         var floorChoice = folder3.add(guicontrols, '片选', { XZ: 0, XY: 1, YZ: 2 });
         var floorShow = folder3.add(guicontrols, '片亮');
         var floor = folder3.add(guicontrols, '片层');
+
+        var ringChoice = folder3.add(guicontrols, '环阶', { 二阶: 2, 四阶: 4,
+            六阶: 6, 八阶: 8 });
+        var ring = folder3.add(guicontrols, '环层');
         folder3.open()
 
         var folder4 = folder2.addFolder('块操作');
-        var blockChoice = folder4.add(guicontrols, '块选', { 一阶: 1, 二阶: 2, 三阶: 3, 四阶: 4,
+        var blockChoice = folder4.add(guicontrols, '块阶', { 一阶: 1, 二阶: 2, 三阶: 3, 四阶: 4,
             五阶: 5, 六阶: 6, 七阶: 7, 八阶: 8 });
         var blockShow = folder4.add(guicontrols, '块亮');
         var block = folder4.add(guicontrols, '块坐标');
@@ -570,14 +580,14 @@
         });
 
         // 片操作
-        floorShow.onFinishChange(function(value) {
-            floorStatus = value;
-            console.log(floorStatus);
-        });
-
         floorChoice.onFinishChange(function(value) {
             floorChoiceNum = value;
             console.log(floorChoiceNum);
+        });
+
+        floorShow.onFinishChange(function(value) {
+            floorStatus = value;
+            console.log(floorStatus);
         });
 
         floor.onFinishChange(function(value) {
@@ -631,6 +641,84 @@
             }
 
         });
+
+        // 环操作
+        ringChoice.onFinishChange(function(value) {
+            ringChoiceNum = value;
+            console.log(ringChoiceNum);
+        });
+
+        ring.onFinishChange(function(value) {   // 亮灭也由片亮来操作，那一个方向的面也有片选来操作
+            ringNum = value;   // 序号
+            console.log(ringNum);
+            if(ringNum >=0 && ringNum <=7)    // 保证输入的范围在正确区间
+            {
+                if(floorChoiceNum == 0)// xz平面
+                {
+                    // y=0, x和z依次从0到7
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    y = ringNum;
+                    for(x = 4 - ringChoiceNum/2; x <= 3 + ringChoiceNum/2; x++){
+                        for(z = 4 - ringChoiceNum/2; z <= 3 + ringChoiceNum/2; z++){
+                            // 根据世界坐标来选择是否亮灭某个led
+                            ledCoordinateStatus(x, y, z, floorStatus);
+                        }
+                    } 
+                    // y固定为floornum
+                    // if(ringChoiceNum == 2)  // 2阶乘环
+                    // {
+                    //     // x由3-4，z由3-4
+                    //     // 4 - 2/2
+                    //     // 3 + 2/2
+
+                    // }else if(ringChoiceNum == 4)
+                    // {
+                    //     // x由2-5，z由2-5
+                    //     // 4 - 4/2
+                    // }else if(ringChoiceNum == 6)
+                    // {
+                    //     // x由1-6，z由1-6
+                    //     // 4 - 6/2
+                    // }else
+                    // {
+                    //     // x由0-7，z由0-7
+                    // }
+
+                }else if(floorChoiceNum == 1)// 亮xy平面
+                {
+                    // z=0, x和y依次从0到7
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    z = ringNum;
+                    for(x = 4 - ringChoiceNum/2; x <= 3 + ringChoiceNum/2; x++){
+                        for(y = 4 - ringChoiceNum/2; y <= 3 + ringChoiceNum/2; y++){
+                            // 根据世界坐标来选择是否亮灭某个led
+                            ledCoordinateStatus(x, y, z, floorStatus);
+                        }
+                    } 
+
+                }else   // 亮yz平面
+                {
+                    // x=0, y和z依次从0到7
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    x = ringNum;
+                    for(y = 4 - ringChoiceNum/2; y <= 3 + ringChoiceNum/2; y++){
+                        for(z = 4 - ringChoiceNum/2; z <= 3 + ringChoiceNum/2; z++){
+                            // 根据世界坐标来选择是否亮灭某个led
+                            ledCoordinateStatus(x, y, z, floorStatus);
+                        }
+                    } 
+                }
+                
+            }
+            
+        });
+
 
         // 块操作
         blockChoice.onFinishChange(function(value) {
