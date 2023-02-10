@@ -1,7 +1,7 @@
 # 8阶光立方模拟器（轻量版）
 
 ## 在线模拟网站  
-<a href="everygg.com">8阶光立方模拟器</a>
+<a href="https://everygg.com">8阶光立方模拟器</a>
 
 ## 简介
 可导出动画数据  
