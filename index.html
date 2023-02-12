@@ -5,6 +5,7 @@
     <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/> -->
     <title>8阶光立方模拟器</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="shortcut icon" href="image/cube.ico">
     <style>
         .tag {
             position: absolute;
@@ -88,7 +89,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v2.0.1</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v2.0.2</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -156,8 +157,8 @@
     var urlPrefix = "https://";
     var url = "192.168.1.153";
     var timeWait = 0;
+    var iotMappingStatus = false;   // 是否启用数字映射，默认为false不启用。单向非完全数字映射
 
-    
 
     init();
     animate();
@@ -434,6 +435,7 @@
 
             this.IP = url;
 
+            // 将数据面包数据发送
             this.iotSendData = function () {
                 var obj = document.getElementById("photodata");
                 var dataOrigin = obj.innerHTML;
@@ -442,6 +444,8 @@
                 // var reponse = '{"code":200,"data":[' + dataOriginlist + ']}'
                 // iotPostData("/data", reponse);
             };
+
+            this.iotMapping = iotMappingStatus;
 
             // this.测试索引 = testindex;
             // 随机生成一个立方体
@@ -461,6 +465,11 @@
                     }
                 }
                 showmessage(hexlist);
+
+                // if(iotMappingStatus)
+                // {
+                //     postData(hexlist);
+                // }
 
                 // var xmlhttp;
                 // if (window.XMLHttpRequest)
@@ -660,6 +669,7 @@
             console.log(url);
         });
         folderIot.add(guicontrols, 'iotSendData').name('发送');
+        // folderIot.add(guicontrols, 'iotMapping').name('数字映射(未开放 )');
         folderIot.open();
 
         // 添加事件
@@ -676,7 +686,7 @@
         var leddown= folder2.add(guicontrols, '灭');
         var ledup= folder2.add(guicontrols, '亮');
         
-        var folder3 = folder2.addFolder('片操作');
+        var folder3 = folder2.addFolder('层操作');
         var floorChoice = folder3.add(guicontrols, '片选', { XZ: 0, XY: 1, YZ: 2 });
         var floorShow = folder3.add(guicontrols, '片亮');
         var floor = folder3.add(guicontrols, '片层');
@@ -684,7 +694,7 @@
         var ringChoice = folder3.add(guicontrols, '环阶', { 二阶: 2, 四阶: 4,
             六阶: 6, 八阶: 8 });
         var ring = folder3.add(guicontrols, '环层');
-        folder3.open()
+        // folder3.open()
 
         var folder4 = folder2.addFolder('块操作');
         var blockChoice = folder4.add(guicontrols, '块阶', { 一阶: 1, 二阶: 2, 三阶: 3, 四阶: 4,
@@ -767,7 +777,7 @@
             }
         });
 
-        // 片操作
+        // 层操作
         floorChoice.onFinishChange(function(value) {
             floorChoiceNum = value;
             console.log(floorChoiceNum);
