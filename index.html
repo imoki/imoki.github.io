@@ -1,6 +1,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
     <title>8阶光立方模拟器</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
@@ -86,7 +87,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v1.5.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v2.0.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -149,6 +150,11 @@
     var currentTime = 0;    // 此刻的时间
     var videoTime = 0;  // 一个场景需要持续的时间0.1s单位 100ms
     var ledrotateflag = 0; // 是否启动旋转
+
+    // 采用http控制硬件
+    var urlPrefix = "http://";
+    var url = "192.168.1.153";
+    var timeWait = 0;
 
     
 
@@ -292,6 +298,119 @@
             save_link.click();
         }
 
+        function iotPostData(urlSuffix, reponse){
+            var xmlhttp;
+            if (window.XMLHttpRequest)
+            {
+                // IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+                xmlhttp=new XMLHttpRequest();
+            }
+            else
+            {
+                // IE6, IE5 浏览器执行代码
+                xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.onreadystatechange=function()
+            {
+                if (xmlhttp.readyState==4 && xmlhttp.status==200)
+                {
+                // document.getElementById("myDiv").innerHTML=xmlhttp.responseText;
+                    console.log("成功接收到数据")
+                    console.log(xmlhttp.response)
+                    // var obj = document.getElementById("photodata");
+                    // obj.innerHTML= xmlhttp.response; 
+                    // showmessage(xmlhttp.response);
+                }
+            }
+            // console.log(LedTime)
+            xmlhttp.open("POST", urlPrefix + url + urlSuffix , true);
+
+            // var obj = {};
+            // obj.code = 200;
+            // obj.data = hexlist;
+            // var reponse = JSON.parse(obj);
+            // var reponse = '{"code":200,"data":[' + data + ']}'
+            // xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            //设置请求头 注：post方式必须设置请求头（在建立连接后设置请求头）var obj = { name: 'zhansgan', age: 18 };
+            // xmlhttp.setRequestHeader("Access-Control-Allow-Origin", "*");
+            // xmlhttp.send("time=" + LedTime + "&data=" + LedArry);
+            xmlhttp.send(reponse);
+        }
+
+        function postData(dataOrigin)
+        {
+            var dataOriginlist = [];
+            dataOrigin = dataOrigin.split(',')
+
+            dataOrigin.forEach(function(data,index,arr){
+                dataOriginlist.push(+data);
+            });
+
+            // dataIntArr=dataStrArr.map(function(data){
+            //     return +data;
+            // });
+
+            // console.log(dataOriginlist.length)
+
+            var sendData = [];
+            var sendDataArray = [];
+            var sendDataItem = [];
+            
+            // 每65个为1组
+            for(var i=0;i<dataOriginlist.length;i+=65){
+                sendData.push(dataOriginlist.slice(i,i+65));
+            }
+            // console.log(sendData)
+
+
+            // 每3个为1组发送数据
+            for(var i = 0; i<sendData.length; i+=3)
+            {
+                // console.log(sendData.slice(i,i+3))
+                sendDataArray= sendData.slice(i,i+3);
+                
+                for(var j=0; j < sendDataArray.length; j++)
+                {
+                    // console.log(sendDataArray[j][0])
+                    timeWait += parseInt(sendDataArray[j][0])
+                }
+                console.log(timeWait * 100)
+
+                sendDataConst = '{"code":200,"data":' + JSON.stringify(sendDataArray) + '}'
+                console.log(sendDataConst)
+
+                iotPostData("/data", sendDataConst);
+
+                // if(timeWait <= 5)   // 如果时间小于等于0.5s,则直接发送数据
+                // {
+                //     iotPostData("/data", sendDataConst);
+                // }else
+                // {
+                //     console.log('等待接收端即将播放完动画')
+                //     // sleep 单位为1毫秒。timeWait单位为100ms 
+                //     delayTime((timeWait-1) * 100);
+                //     iotPostData("/data", sendDataConst);
+                // }
+
+                timeWait = 0;
+            }
+
+            timeWait = 0
+        }
+
+
+
+        const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+
+        // 将延迟函数封装成promise对象
+        async function delayTime (num) {
+        return new Promise((resolve,reject) => { // return / await 等待执行完
+            setTimeout(() => {
+            resolve('延迟')
+            console.log('延迟')
+            },num)
+        })
+        }
 
         // 将呈现器的输出添加到HTML元素
 		// document.getElementById("dom").appendChild(renderer.domElement);
@@ -311,9 +430,21 @@
             this.块阶 = blockChoiceNum;
             this.块亮 = blockStatus;
             this.块坐标 = blockNum;
+
+            this.IP = url;
+
+            this.iotSendData = function () {
+                var obj = document.getElementById("photodata");
+                var dataOrigin = obj.innerHTML;
+                postData(dataOrigin);
+
+                // var reponse = '{"code":200,"data":[' + dataOriginlist + ']}'
+                // iotPostData("/data", reponse);
+            };
+
             // this.测试索引 = testindex;
             // 随机生成一个立方体
-            this.拍摄 = function () {
+            this.photo = function () {
                 // LedTime LedArry
                 hexlist.push(LedTime)
                 var total = 0;
@@ -329,6 +460,46 @@
                     }
                 }
                 showmessage(hexlist);
+
+                // var xmlhttp;
+                // if (window.XMLHttpRequest)
+                // {
+                //     // IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+                //     xmlhttp=new XMLHttpRequest();
+                // }
+                // else
+                // {
+                //     // IE6, IE5 浏览器执行代码
+                //     xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                // }
+                // xmlhttp.onreadystatechange=function()
+                // {
+                //     if (xmlhttp.readyState==4 && xmlhttp.status==200)
+                //     {
+                //     // document.getElementById("myDiv").innerHTML=xmlhttp.responseText;
+                //         console.log("成功接收到数据")
+                //         console.log(xmlhttp.response)
+                //         // var obj = document.getElementById("photodata");
+                //         // obj.innerHTML= xmlhttp.response; 
+                //         // showmessage(xmlhttp.response);
+                //     }
+                // }
+                // // console.log(LedTime)
+                // xmlhttp.open("POST",urlPrefix + url + "/data",true);
+                // var obj = document.getElementById("photodata");
+                // var data = obj.innerHTML;
+
+                // // var obj = {};
+                // // obj.code = 200;
+                // // obj.data = hexlist;
+                // // var reponse = JSON.parse(obj);
+                // var reponse = "code=200" + "&" + "data=[[" + data + "]]";
+                // var reponse = '{"code":200,"data":[[' + hexlist + ']]}'
+                // // xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                // //设置请求头 注：post方式必须设置请求头（在建立连接后设置请求头）var obj = { name: 'zhansgan', age: 18 };
+			    // // xmlhttp.setRequestHeader("Access-Control-Allow-Origin", "*");
+                // // xmlhttp.send("time=" + LedTime + "&data=" + LedArry);
+                // xmlhttp.send(reponse);
 
             };
 
@@ -364,15 +535,14 @@
                 // inputclick(inputObj.value)
             };
 
-            this.获取拍摄数据 = function(){
-
-            };
 
             this.清空拍摄数据 = function(){
 
                 hexlist.splice(0);
                 showmessage(hexlist);
             };
+
+            
 
 
             this.播放 = function(){
@@ -483,11 +653,18 @@
 
         };
         var gui = new dat.GUI();
+        var folderIot = gui.addFolder('硬件控制');
+        folderIot.add(guicontrols, 'IP').onFinishChange(function(value) {
+            url = value;
+            console.log(url);
+        });
+        folderIot.add(guicontrols, 'iotSendData').name('发送');
+        folderIot.open();
+
         // 添加事件
         // gui.add(guicontrols, '测试');
-        gui.add(guicontrols, '拍摄');
+        gui.add(guicontrols, 'photo').name('拍摄');
         gui.add(guicontrols, '撤回');
-        // gui.add(guicontrols, '获取拍摄数据');
         gui.add(guicontrols, '清空拍摄数据');
         gui.add(guicontrols, '导出');
         gui.add(guicontrols, '导入');
@@ -517,6 +694,16 @@
 
         
         folder2.open()
+
+       
+        // .name('Your Worker ID:').listen().onFinishChange(function (value) {
+        //     if (confirm('Is" '+ value +  ' "your worker id?') === true) {
+        //         workerId = value;
+        //     } else {
+        //         params.text="";
+        //     }
+        // });
+
         var folder = gui.addFolder('动画');
         folder.add(guicontrols, '循环播放');
         folder.add(guicontrols, '播放');
