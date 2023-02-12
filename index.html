@@ -2,6 +2,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
     <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"/> -->
     <title>8阶光立方模拟器</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
@@ -87,7 +88,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v2.0.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v2.0.1</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -152,7 +153,7 @@
     var ledrotateflag = 0; // 是否启动旋转
 
     // 采用http控制硬件
-    var urlPrefix = "http://";
+    var urlPrefix = "https://";
     var url = "192.168.1.153";
     var timeWait = 0;
 
