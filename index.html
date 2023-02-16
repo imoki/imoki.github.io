@@ -89,7 +89,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v2.0.2</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v3.0.0</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -103,21 +103,26 @@
     </div>
     
     <div id="backgroundImage">
-        
     </div>
 <!--load three.js and the mouse controls.-->
-<script src="js/three.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/three@0.115/build/three.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/three@0.115/examples/js/loaders/GLTFLoader.js"></script> -->
+<!-- <script src="js/three.min.js"></script> -->
+<script src="js/three.js"></script>
+<script src="js/GLTFLoader.js"></script>
 <script src="js/TrackballControls.js"></script>
 <script src="js/OrbitControls.js"></script>
 <script type="text/javascript" src="js/dat.gui.js"></script>
 
-
 <script>
+    // 引入gltf模型加载库GLTFLoader.js
+
     var container;
     var camera, scene, renderer, controls;
     var ws = 2;
-	var mesh = [];
-    var group;
+	var mesh = [];  // 保存每一个led，点击事件从中获取led坐标
+    var group ;
+    var magnification = parseInt(10);   // LED模型放大倍数
 
     var cubeSize = 8;
     var gapSize = cubeSize * 20;    // 两个物体之间的间隔，默认160
@@ -163,7 +168,6 @@
     init();
     animate();
 
-
     // 显示文本数据
     function showmessage(str){
         var obj = document.getElementById("photodata");
@@ -186,6 +190,75 @@
         };
     }
 
+    function cloneModel(obj, x, y, z, name) { //params: 模型， 坐标xyz，自定义数据
+        const cloneObj = obj.clone();
+        cloneObj.name = name
+        // cloneObj.position.set(x, y, z);
+        // cloneObj.children.map((v, i) => { //克隆材质
+        //     if (v.material) {
+        //     v.material = obj.children[i].material.clone();
+        //     }
+        // });
+
+        // 为克隆的所有材质和纹理创建新的实例
+        cloneObj.traverse(child => {
+        if (child instanceof THREE.Mesh) {
+            // child.position = child.position.clone();
+            child.material = child.material.clone();
+            
+            if (child.material.map) {
+            child.material.map = child.material.map.clone();
+            }
+            // 因为对led继续了放大，所以需要调整坐标
+            child.position.set(x/magnification, y/magnification, z/magnification);
+            
+            
+            if(child.name == "Cylinder_0")
+            {
+                this.mesh.push(child); 
+            }
+        }
+        });
+        // cloneObj.$data = {
+        //     name: name
+        // }
+        
+        // console.log(cloneObj)
+        // this.mesh.add(cloneObj);
+        this.group.add(cloneObj);
+
+    }
+
+    // 遍历场景中的所有对象
+    function findGroupByName(name) {
+        let result = null;
+        scene.traverse(function(child) {
+            if (child instanceof THREE.Group && child.name === name) {
+            result = child;
+            }
+        });
+        return result;
+    }
+
+    // 控制group对象中某个物体的亮灭。传入物体，和led的状态
+    function LedShow(index, status){
+        var object = findGroupByName(index + "");
+        if (object) {   // 找到了具有该名称的组对象
+            object.traverse(function(child) {
+                if (child instanceof THREE.Mesh) {
+                    if ( child.isMesh ) {
+                        if(child.name == "Cylinder_0")
+                        {
+                            child.material.color.set(status); // 点亮
+                            child.material.emissive.set(child.material.color)
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+
     function init() {
         LedArry = new Array(512).fill(0);   // 初始化512个led
 
@@ -203,7 +276,7 @@
 
         //controls
         controls = new THREE.TrackballControls(camera, renderer.domElement);
-        controls.minDistance = 200;
+        controls.minDistance = 10;
         controls.maxDistance = 4500;
 
         // 创建组，继承自Object3D
@@ -221,36 +294,91 @@
         light.position.copy(camera.position);
         scene.add(light);
 
+        //点光源
+        // var point = new THREE.PointLight(0xffffff);
+        // point.position.set(camera.position); //点光源位置
+        // // 通过add方法插入场景中，不插入的话，渲染的时候不会获取光源的信息进行光照计算
+        // scene.add(point); //点光源添加到场景中
+
+
         initLED();
         initGround();
 
         // 初始化LED
         function initLED() {
-            for (var y = 0; y < cubeSize; y++) {
-                for (var z = 0; z < cubeSize; z++) {
-                    for (var x = 0; x < cubeSize; x++) {
-                        // var cube = new THREE.Mesh(new THREE.CubeGeometry(20, 20, 20), new THREE.MeshBasicMaterial({
-                        //     color: 0xC0C0C0
-                        // }));
-                        var sphereGeometry = new THREE.SphereGeometry(20, 20, 20)
-                        // sphereGeometry.opacity = 0.1
-                        var cube = new THREE.Mesh(sphereGeometry, new THREE.MeshBasicMaterial({
-                            color: 0xC0C0C0
-                        }));
-                        cube.material.opacity =0.7  // 修改透明度
-                        cube.material.transparent = true;
-                        cube.position.set(x * (gapSize), y * (gapSize), z * (gapSize)); //sort out gaps
-                        // index = x + z*7 + y * 64;
-                        cube.name = x + z*cubeSize + y*cubeSize*cubeSize + "";
-                        // console.log(cube.name)
-                        scene.add(cube); //add shape to scene
-                        mesh.push(cube);
-                        group.add(cube);
-                        name++;
+            // 加载LED模型
+            var loader = new THREE.GLTFLoader();
+            loader.load( 'model/led.gltf', function ( gltf ) {
+                // 遍历模型中所有的材质
+                gltf.scene.traverse(function(child) {
+                if (child instanceof THREE.Mesh) {
+                    // console.log(child)
+                    if ( child.isMesh ) {
+                        if(child.name == "Cylinder_0")
+                        {
+                            // child.material = new THREE.MeshLambertMaterial({ 
+                            //     color: 0xff0000,
+                            //     transparent:true,   // 是否开启透明
+                            //     opacity: 0.8    // 透明度设置，0表示完全透明，1表示完全不透明
+                            // });
+                            // child.material.color = 0xC0C0C0;
+                            child.material.color.set("#C0C0C0"); // 点亮
+                            // child.material.emissive.set("#C0C0C0")
+                            child.material.emissive.set(child.material.color)
+                            // child.material.transparent = true;
+                            // child.material.opacity =0.8  // 修改透明度
+                        }
                     }
-
                 }
-            }
+                });
+                // gltf.scene.children[0].material = new THREE.MeshBasicMaterial({ color: 0xff0000, emissive: 0xffffff });
+                // console.log('控制台查看加载gltf文件返回的对象结构',gltf);
+                // console.log('gltf对象场景属性',gltf.scene);
+                // 返回的场景对象gltf.scene插入到threejs场景中
+                // scene.add( gltf.scene );
+                gltf.scene.position.set(0, 0, 0)
+                // 这里对led继续方向调整及大小调整，所以克隆后的坐标也会扩大相应的倍数
+                gltf.scene.scale.set(10, 10, -10);
+                // gltf.scene.translateY(0);
+                // gltf.scene.position.set(0,10,0);
+                // gltf.scene.translateY(0);
+                // scene.add(gltf.scene);
+
+                for (var y = 0; y < cubeSize; y++) {
+                    for (var z = 0; z < cubeSize; z++) {
+                        for (var x = 0; x < cubeSize; x++) {
+                            cloneModel(gltf.scene, x * (gapSize), y * (gapSize), z * (gapSize), x + z*cubeSize + y*cubeSize*cubeSize + "")
+                            // cloneModel(gltf.scene, x , y, z , x + z*cubeSize + y*cubeSize*cubeSize + "")
+
+                            /*
+                            // 原始的球
+                            // var cube = new THREE.Mesh(new THREE.CubeGeometry(20, 20, 20), new THREE.MeshBasicMaterial({
+                            //     color: 0xC0C0C0
+                            // }));
+                            var sphereGeometry = new THREE.SphereGeometry(20, 20, 20)
+                            // sphereGeometry.opacity = 0.1
+                            var cube = new THREE.Mesh(sphereGeometry, new THREE.MeshBasicMaterial({
+                                color: 0xC0C0C0
+                            }));
+                            cube.material.opacity =0.7  // 修改透明度
+                            cube.material.transparent = true;
+                            cube.position.set(x * (gapSize), y * (gapSize), z * (gapSize)); //sort out gaps
+                            // index = x + z*7 + y * 64;
+                            cube.name = x + z*cubeSize + y*cubeSize*cubeSize + "";
+                            // console.log(cube.name)
+                            scene.add(cube); //add shape to scene
+                            mesh.push(cube);
+                            group.add(cube);
+                            */
+
+                            
+                            // name++;
+                        }
+
+                    }
+                }
+
+            })
         }
 
         // 绘制路网
@@ -402,17 +530,17 @@
 
 
 
-        const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+        // const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
-        // 将延迟函数封装成promise对象
-        async function delayTime (num) {
-        return new Promise((resolve,reject) => { // return / await 等待执行完
-            setTimeout(() => {
-            resolve('延迟')
-            console.log('延迟')
-            },num)
-        })
-        }
+        // // 将延迟函数封装成promise对象
+        // async function delayTime (num) {
+        // return new Promise((resolve,reject) => { // return / await 等待执行完
+        //     setTimeout(() => {
+        //     resolve('延迟')delayTime
+        //     console.log('延迟')
+        //     },num)
+        // })
+        // }
 
         // 将呈现器的输出添加到HTML元素
 		// document.getElementById("dom").appendChild(renderer.domElement);
@@ -470,46 +598,6 @@
                 // {
                 //     postData(hexlist);
                 // }
-
-                // var xmlhttp;
-                // if (window.XMLHttpRequest)
-                // {
-                //     // IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
-                //     xmlhttp=new XMLHttpRequest();
-                // }
-                // else
-                // {
-                //     // IE6, IE5 浏览器执行代码
-                //     xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-                // }
-                // xmlhttp.onreadystatechange=function()
-                // {
-                //     if (xmlhttp.readyState==4 && xmlhttp.status==200)
-                //     {
-                //     // document.getElementById("myDiv").innerHTML=xmlhttp.responseText;
-                //         console.log("成功接收到数据")
-                //         console.log(xmlhttp.response)
-                //         // var obj = document.getElementById("photodata");
-                //         // obj.innerHTML= xmlhttp.response; 
-                //         // showmessage(xmlhttp.response);
-                //     }
-                // }
-                // // console.log(LedTime)
-                // xmlhttp.open("POST",urlPrefix + url + "/data",true);
-                // var obj = document.getElementById("photodata");
-                // var data = obj.innerHTML;
-
-                // // var obj = {};
-                // // obj.code = 200;
-                // // obj.data = hexlist;
-                // // var reponse = JSON.parse(obj);
-                // var reponse = "code=200" + "&" + "data=[[" + data + "]]";
-                // var reponse = '{"code":200,"data":[[' + hexlist + ']]}'
-                // // xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-                // //设置请求头 注：post方式必须设置请求头（在建立连接后设置请求头）var obj = { name: 'zhansgan', age: 18 };
-			    // // xmlhttp.setRequestHeader("Access-Control-Allow-Origin", "*");
-                // // xmlhttp.send("time=" + LedTime + "&data=" + LedArry);
-                // xmlhttp.send(reponse);
 
             };
 
@@ -627,15 +715,17 @@
                 var object = scene.getObjectByName(testindex + "");
                 console.log(object)
                 object.material.color.set("#ff0000"); // 点亮
+                object.material.emissive.set(object.material.color);
                 
             };
 
             this.全亮 = function(){
                 for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
-                    // console.log(i + "")
-                    var object = scene.getObjectByName(i + "");
-                    // console.log(object)
-                    object.material.color.set("#ff0000"); // 点亮
+                    // var object = scene.getObjectByName(i + "");
+                    // // console.log(object)
+                    // object.material.color.set("#ff0000"); // 点亮
+                    // object.material.emissive.set(object.material.color);
+                    LedShow(i, "#FF0000");
                     LedArry[i] = 1;    // 改为亮的状态
 
                 }
@@ -648,14 +738,18 @@
 
             this.反转 = function(){
                 for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
-                    var object = scene.getObjectByName(i + "");
+                    // var object = scene.getObjectByName(i + "");
                     if (LedArry[i] == 0)  // 当前LED是灭的状态
                     {
-                        object.material.color.set("#ff0000"); // 点亮
+                        // object.material.color.set("#ff0000"); // 点亮
+                        // object.material.emissive.set(object.material.color);
+                        LedShow(i, "#FF0000");
                         LedArry[i] = 1;    // 改为亮的状态
                     }else
                     {
-                        object.material.color.set("#C0C0C0");   // 熄灭
+                        // object.material.color.set("#C0C0C0");   // 熄灭
+                        // object.material.emissive.set(object.material.color);
+                        LedShow(i, "#C0C0C0");
                         LedArry[i] = 0;
                     }
                 }
@@ -749,10 +843,17 @@
             {
                 // 世界坐标会转化为led数组下标
                 var index = LedIndexOrigin(x, y, z) 
-                var object = scene.getObjectByName(index + "");
-                // console.log(object)
-                object.material.color.set("#C0C0C0"); // 熄灭
+                // 通过名称获取具有特定名称的组对象
+                LedShow(index, "#C0C0C0");
                 LedArry[index] = 0;    // 改为灭的状态
+
+                
+
+                // var object = scene.getObjectByName(index + "");
+                // // console.log(object)
+                // object.material.color.set("#C0C0C0"); // 熄灭
+                // object.material.emissive.set(object.material.color);
+                // LedArry[index] = 0;    // 改为灭的状态
             }
         });
 
@@ -770,10 +871,15 @@
             if(formatNum(x) != -1 && formatNum(y) != -1 && formatNum(z) != -1)
             {
                 var index = LedIndexOrigin(x, y, z) 
-                var object = scene.getObjectByName(index + "");
-                // console.log(object)
-                object.material.color.set("#ff0000"); // 点亮
-                LedArry[index] = 1;    // 改为亮的状态
+                LedShow(index, "#FF0000");
+                LedArry[index] = 0;    // 改为灭的状态
+
+
+                // var object = scene.getObjectByName(index + "");
+                // // console.log(object)
+                // object.material.color.set("#ff0000"); // 点亮
+                // object.material.emissive.set(object.material.color);
+                // LedArry[index] = 1;    // 改为亮的状态
             }
         });
 
@@ -901,7 +1007,7 @@
 
         // 块操作
         blockChoice.onFinishChange(function(value) {
-            blockChoiceNum = parseInt(value);
+            blockChoiceNum = parseInt(value);transPosition
             // console.log(blockChoiceNum);
         });
 
@@ -940,8 +1046,10 @@
         // 熄灭所有led，并将led数组归零
         function ledDown(){
             for(var i=0; i<cubeSize*cubeSize*cubeSize; i++){
-                    var object = scene.getObjectByName(i + "");
-                    object.material.color.set("#C0C0C0"); // 熄灭
+                    // var object = scene.getObjectByName(i + "");
+                    // object.material.color.set("#C0C0C0"); // 熄灭
+                    // object.material.emissive.set(object.material.color);
+                    LedShow(i, "#C0C0C0");
                     LedArry[i] = 0;
             }
         }
@@ -953,18 +1061,28 @@
                 .innerHeight) * 2 + 1, 0.5);
             vector = vector.unproject(camera); // 将屏幕的坐标转换成三维场景中的坐标
             var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+            // console.log(mesh)
             var intersects = raycaster.intersectObjects(mesh, true);
             // console.log(mesh)
+            // console.log(intersects)
+            // console.log(intersects[0])
             if (intersects.length > 0) {
                 // console.log(intersects[0].object.position)  // 物体的世界坐标，右手坐标系
-                var index = LedIndex(intersects[0].object.position.x, intersects[0].object.position.y, intersects[0].object.position.z) 
+                // 因为对led继续了放大，所以需要调整坐标
+                var index = LedIndex(intersects[0].object.position.x * magnification, intersects[0].object.position.y * magnification, intersects[0].object.position.z * magnification) 
+                console.log(index)
                 if (LedArry[index] == 0)  // 当前LED是灭的状态
                 {
-                    intersects[0].object.material.color.set("#ff0000"); // 点亮
+                    // 直接使用下面两行，导线也会被点亮
+                    // intersects[0].object.material.color.set("#ff0000"); // 点亮
+                    // intersects[0].object.material.emissive.set(intersects[0].object.material.color)
+                    LedShow(index, "#FF0000")
                     LedArry[index] = 1;    // 改为亮的状态
                 }else
                 {
-                    intersects[0].object.material.color.set("#C0C0C0");   // 熄灭
+                    // intersects[0].object.material.color.set("#C0C0C0");   // 熄灭
+                    // intersects[0].object.material.emissive.set(intersects[0].object.material.color)
+                    LedShow(index, "#C0C0C0")
                     LedArry[index] = 0;
                 }
 
@@ -1035,14 +1153,18 @@
             if(formatNum(x) != -1 && formatNum(y) != -1 && formatNum(z) != -1)
             {
                 var index = LedIndexOrigin(x, y, z) 
-                var object = scene.getObjectByName(index + "");
+                // var object = scene.getObjectByName(index + "");
                 if(status){ // 亮
                     // console.log(object)
-                    object.material.color.set("#ff0000"); // 点亮
+                    // object.material.color.set("#ff0000"); // 点亮
+                    // object.material.emissive.set(object.material.color);
+                    LedShow(index, "#FF0000")
                     LedArry[index] = 1;    // 改为亮的状态
                 }else{  // 灭
                     // console.log(object)
-                    object.material.color.set("#C0C0C0"); // 熄灭
+                    // object.material.color.set("#C0C0C0"); // 熄灭
+                    // object.material.emissive.set(object.material.color);
+                    LedShow(index, "#C0C0C0")
                     LedArry[index] = 0;    // 改为灭的状态
                 }
                 
@@ -1144,14 +1266,18 @@
                     if(t == 1)  // 需要点亮
                     {
                         LedArry[index] = 1;    // 改为亮的状态
-                        var object = scene.getObjectByName(index + "");
-                        // console.log(object)
-                        object.material.color.set("#ff0000"); // 点亮
+                        // var object = scene.getObjectByName(index + "");
+                        // // console.log(object)
+                        // object.material.color.set("#ff0000"); // 点亮
+                        // object.material.emissive.set(object.material.color);
+                        LedShow(index, "#FF0000")
                     }else
                     {
                         LedArry[index] = 0;    // 熄灭的状态
-                        var object = scene.getObjectByName(index + "");
-                        object.material.color.set("#C0C0C0"); // 熄灭
+                        // var object = scene.getObjectByName(index + "");
+                        // object.material.color.set("#C0C0C0"); // 熄灭
+                        // object.material.emissive.set(object.material.color);
+                        LedShow(index, "#C0C0C0")
                     }
                     index += 1;
                 }
