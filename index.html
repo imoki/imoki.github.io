@@ -89,7 +89,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v3.0.1</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v3.0.2</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -1071,7 +1071,9 @@
             if (intersects.length > 0) {
                 // console.log(intersects[0].object.position)  // 物体的世界坐标，右手坐标系
                 // 因为对led继续了放大，所以需要调整坐标
-                var index = LedIndex(intersects[0].object.position.x * magnification, intersects[0].object.position.y * magnification, intersects[0].object.position.z * magnification) 
+                // var index = LedIndex(intersects[0].object.position.x * magnification, intersects[0].object.position.y * magnification, intersects[0].object.position.z * magnification) 
+                // 因模型问题，修改y,z映射后，点击事件的y,z坐标也需要修改
+                var index = LedIndex(intersects[0].object.position.x * magnification, intersects[0].object.position.z * magnification, intersects[0].object.position.y * magnification) 
                 console.log(index)
                 if (LedArry[index] == 0)  // 当前LED是灭的状态
                 {
