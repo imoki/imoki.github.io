@@ -89,7 +89,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v3.0.0</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v3.0.1</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -347,9 +347,11 @@
                 for (var y = 0; y < cubeSize; y++) {
                     for (var z = 0; z < cubeSize; z++) {
                         for (var x = 0; x < cubeSize; x++) {
-                            cloneModel(gltf.scene, x * (gapSize), y * (gapSize), z * (gapSize), x + z*cubeSize + y*cubeSize*cubeSize + "")
-                            // cloneModel(gltf.scene, x , y, z , x + z*cubeSize + y*cubeSize*cubeSize + "")
 
+                            // cloneModel(gltf.scene, x * (gapSize), y * (gapSize), z * (gapSize), x + z*cubeSize + y*cubeSize*cubeSize + "")
+                            // 修复y, z坐标映射问题
+                            cloneModel(gltf.scene, x * (gapSize), z * (gapSize), y * (gapSize), x + z*cubeSize + y*cubeSize*cubeSize + "")
+                            
                             /*
                             // 原始的球
                             // var cube = new THREE.Mesh(new THREE.CubeGeometry(20, 20, 20), new THREE.MeshBasicMaterial({
