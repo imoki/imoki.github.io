@@ -89,7 +89,7 @@
 
     <!-- <div class="tag" id="tag"> -->
     <div class="tag">
-        <span style="color:white;font-size: 10px;padding: 5px">v3.0.2</span>
+        <span style="color:white;font-size: 10px;padding: 5px">v3.0.3</span>
         <span style="color:white;font-size: 10px;padding: 5px">拍摄数据</span>
         <div class="box">
             <div class="scroll-wrap">
@@ -123,6 +123,8 @@
 	var mesh = [];  // 保存每一个led，点击事件从中获取led坐标
     var group ;
     var magnification = parseInt(10);   // LED模型放大倍数
+    var ledColorUp = "#397FE9" //"#F05731";
+    var ledColorDown = "#C0C0C0";
 
     var cubeSize = 8;
     var gapSize = cubeSize * 20;    // 两个物体之间的间隔，默认160
@@ -190,6 +192,7 @@
         };
     }
 
+    // 克隆模型，避免重复加载模型
     function cloneModel(obj, x, y, z, name) { //params: 模型， 坐标xyz，自定义数据
         const cloneObj = obj.clone();
         cloneObj.name = name
@@ -322,7 +325,7 @@
                             //     opacity: 0.8    // 透明度设置，0表示完全透明，1表示完全不透明
                             // });
                             // child.material.color = 0xC0C0C0;
-                            child.material.color.set("#C0C0C0"); // 点亮
+                            child.material.color.set(ledColorDown); // 点亮
                             // child.material.emissive.set("#C0C0C0")
                             child.material.emissive.set(child.material.color)
                             // child.material.transparent = true;
@@ -716,7 +719,7 @@
                 // console.log(scene.children)
                 var object = scene.getObjectByName(testindex + "");
                 console.log(object)
-                object.material.color.set("#ff0000"); // 点亮
+                object.material.color.set(ledColorUp); // 点亮
                 object.material.emissive.set(object.material.color);
                 
             };
@@ -727,7 +730,7 @@
                     // // console.log(object)
                     // object.material.color.set("#ff0000"); // 点亮
                     // object.material.emissive.set(object.material.color);
-                    LedShow(i, "#FF0000");
+                    LedShow(i, ledColorUp);
                     LedArry[i] = 1;    // 改为亮的状态
 
                 }
@@ -745,13 +748,13 @@
                     {
                         // object.material.color.set("#ff0000"); // 点亮
                         // object.material.emissive.set(object.material.color);
-                        LedShow(i, "#FF0000");
+                        LedShow(i, ledColorUp);
                         LedArry[i] = 1;    // 改为亮的状态
                     }else
                     {
                         // object.material.color.set("#C0C0C0");   // 熄灭
                         // object.material.emissive.set(object.material.color);
-                        LedShow(i, "#C0C0C0");
+                        LedShow(i, ledColorDown);
                         LedArry[i] = 0;
                     }
                 }
@@ -775,12 +778,13 @@
         gui.add(guicontrols, '清空拍摄数据');
         gui.add(guicontrols, '导出');
         gui.add(guicontrols, '导入');
-        var folder2 = gui.addFolder('快捷操作');
+        var folder2 = gui.addFolder('制作');
         folder2.add(guicontrols, '全灭');
         folder2.add(guicontrols, '全亮');
         folder2.add(guicontrols, '反转');
-        var leddown= folder2.add(guicontrols, '灭');
-        var ledup= folder2.add(guicontrols, '亮');
+        var folderpoint = folder2.addFolder('点操作');
+        var leddown= folderpoint.add(guicontrols, '灭');
+        var ledup= folderpoint.add(guicontrols, '亮');
         
         var folder3 = folder2.addFolder('层操作');
         var floorChoice = folder3.add(guicontrols, '片选', { XZ: 0, XY: 1, YZ: 2 });
@@ -846,7 +850,7 @@
                 // 世界坐标会转化为led数组下标
                 var index = LedIndexOrigin(x, y, z) 
                 // 通过名称获取具有特定名称的组对象
-                LedShow(index, "#C0C0C0");
+                LedShow(index, ledColorDown);
                 LedArry[index] = 0;    // 改为灭的状态
 
                 
@@ -873,7 +877,7 @@
             if(formatNum(x) != -1 && formatNum(y) != -1 && formatNum(z) != -1)
             {
                 var index = LedIndexOrigin(x, y, z) 
-                LedShow(index, "#FF0000");
+                LedShow(index, ledColorUp);
                 LedArry[index] = 0;    // 改为灭的状态
 
 
@@ -1051,7 +1055,7 @@
                     // var object = scene.getObjectByName(i + "");
                     // object.material.color.set("#C0C0C0"); // 熄灭
                     // object.material.emissive.set(object.material.color);
-                    LedShow(i, "#C0C0C0");
+                    LedShow(i, ledColorDown);
                     LedArry[i] = 0;
             }
         }
@@ -1080,13 +1084,13 @@
                     // 直接使用下面两行，导线也会被点亮
                     // intersects[0].object.material.color.set("#ff0000"); // 点亮
                     // intersects[0].object.material.emissive.set(intersects[0].object.material.color)
-                    LedShow(index, "#FF0000")
+                    LedShow(index, ledColorUp)
                     LedArry[index] = 1;    // 改为亮的状态
                 }else
                 {
                     // intersects[0].object.material.color.set("#C0C0C0");   // 熄灭
                     // intersects[0].object.material.emissive.set(intersects[0].object.material.color)
-                    LedShow(index, "#C0C0C0")
+                    LedShow(index, ledColorDown)
                     LedArry[index] = 0;
                 }
 
@@ -1162,13 +1166,13 @@
                     // console.log(object)
                     // object.material.color.set("#ff0000"); // 点亮
                     // object.material.emissive.set(object.material.color);
-                    LedShow(index, "#FF0000")
+                    LedShow(index, ledColorUp)
                     LedArry[index] = 1;    // 改为亮的状态
                 }else{  // 灭
                     // console.log(object)
                     // object.material.color.set("#C0C0C0"); // 熄灭
                     // object.material.emissive.set(object.material.color);
-                    LedShow(index, "#C0C0C0")
+                    LedShow(index, ledColorDown)
                     LedArry[index] = 0;    // 改为灭的状态
                 }
                 
@@ -1274,14 +1278,14 @@
                         // // console.log(object)
                         // object.material.color.set("#ff0000"); // 点亮
                         // object.material.emissive.set(object.material.color);
-                        LedShow(index, "#FF0000")
+                        LedShow(index, ledColorUp)
                     }else
                     {
                         LedArry[index] = 0;    // 熄灭的状态
                         // var object = scene.getObjectByName(index + "");
                         // object.material.color.set("#C0C0C0"); // 熄灭
                         // object.material.emissive.set(object.material.color);
-                        LedShow(index, "#C0C0C0")
+                        LedShow(index, ledColorDown)
                     }
                     index += 1;
                 }
