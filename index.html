@@ -1,7 +1,40 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8">
+    <title>基于金山文档的漂流瓶项目</title>
+    <style>
+    </style>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <div class="container">
+        <h1>🌊 金山漂流瓶</h1>
+        
+        <!-- 扔漂流瓶区域 -->
+        <div>
+            <textarea id="newBottle" placeholder="写下你的漂流瓶..."></textarea>
+            <!-- <button class="el-button el-button--primary" onclick="throwBottle()">扔出漂流瓶</button> -->
+
+            <button id="catchButton" class="action-button">捞漂流瓶</button>
+            <button id="throwButton" class="action-button">扔漂流瓶</button>
+
+            <div id="bottles"></div>
+            <div id="error" class="error"></div>
+            <!-- 消息提示容器 -->
+            <div id="toast" class="toast"></div>
+        </div>
+
+        <!-- 背景装饰 -->
+        <div class="beach"></div>
+        <div class="wave-layer"></div>
+        <div class="wave-layer"></div>
+        <div class="wave-layer"></div>
+    </div>
+
+    <script src="script.js"></script>
+
+
 </body>
 </html>
