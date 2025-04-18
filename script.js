@@ -38,8 +38,7 @@ const defaultBottles = [
 // 3. 通过“写密码”写入“仅写文件”数据 - 扔漂流瓶
 
 // 后端处理流程：
-// 1. 密钥生成、加密、存储 - 安全处理
-// 2. 修改“密钥文件”数据 - 密钥处理
+// 1. 密钥生成、加密、存储、修改 - 安全处理
 // 2. 读取“仅写文件”数据，将数据写入金山文档，清空“仅写文件”，修改密码 - 更新数据库漂流瓶集
 // 3. 根据金山文档数据选择漂流瓶更新“仅读文件”，修改密码 - 更新临时漂流瓶集
 
@@ -49,7 +48,7 @@ const defaultBottles = [
 // “密钥文件” - “仅读文件”、“仅写文件”的密文密码
 // “读密码” - “仅读文件”的明文密码
 // “写密码” - “仅写文件”的明文密码
-// 金山文档密钥数据 - “读密码”、“写密码”的明文密码
+// 金山文档密钥数据 - “读密码”、“写密码”的密文密码
 // 金山文档用户数据 - 数据库漂流瓶集
 
 // ================================业务逻辑共用函数开始================================
@@ -383,7 +382,7 @@ async function getKeyConfig() {
         
         // 缓存到全局变量
         globalKeyConfig = config;
-        // console.log('密钥配置已缓存:', config);
+        console.log('密钥配置已缓存:', config);
         return config;
     } catch (error) {
         showError(`❌ 密钥配置获取失败: ${error.message}`);
@@ -570,7 +569,7 @@ async function throwBottle() {
     if (!message) return;
 
     try {
-        const key = await getPassword('data_read');
+        const key = await getPassword('data_write');
         await addNecutData(NETCUT_DATA_WRITE, key.password, message);
 
         // 使用消息提示代替alert
