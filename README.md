@@ -40,7 +40,7 @@ QQ群：**963592267**
     - 🔥 兼容airscript 1.0和airscript 2.0(Beta)
 
 ## 📺️ 视频教程
-[![](https://img.shields.io/badge/金山推送器-无盐七-blue)](https://www.bilibili.com/video/BV1bXckehEdn) https://www.bilibili.com/video/BV1bXckehEdn/
+[![](https://img.shields.io/badge/金山推送器-无盐七-blue)](https://www.bilibili.com/video/BV1hb5sz6EaT) https://www.bilibili.com/video/BV1hb5sz6EaT
   
 ## 🛰️ 文字部署步骤
 1. 显示层：fork或直接复制项目代码到你的仓库，仓库名为xxx.github.io。（这里的xxx为你github的昵称。自动会启用github page。）  
