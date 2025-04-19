@@ -207,16 +207,33 @@ function append_json(note_content, message) {
         // 1. 处理空值和初始化数据结构
         let jsonData = [];
         if (note_content) {
-            // 2. 过滤特殊字符（保留JSON必须的符号{}[]:",）
-            const sanitized = note_content.replace(/[^\w{}\[\]",:\/\-\s]/g, '');
+            // // 2. 过滤特殊字符（保留JSON必须的符号{}[]:",）
+            // const sanitized = note_content.replace(/[^\w{}\[\]",:\/\-\s]/g, '');
+            // 允许Unicode字符
+            // const sanitized = note_content.replace(/[^\p{L}\p{N}\p{Sc}{}\[\]",:\/\-\s\.]/gu, '');
+            const sanitized = note_content
             // console.log(sanitized)
             // 3. 容错解析JSON
-            jsonData = JSON.parse(sanitized);
+            // 添加容错机制
+            try {
+                jsonData = JSON.parse(sanitized);
+            } catch (parseError) {
+                console.warn('JSON解析失败，尝试修复格式:', parseError);
+                jsonData = JSON.parse(sanitized.replace(/([,:{])(\s*)(?=})/g, '$1'));
+            }
+
             if (!Array.isArray(jsonData)) {
                 console.warn('数据格式异常，重置为数组');
                 jsonData = [];
             }
         }
+
+        // // 增强message过滤逻辑（保留emoji和中文）
+        // const cleanMessage = message
+        //         .replace(/</g, '＜')  // 替换全角符号
+        //         .replace(/>/g, '＞')
+        //         .replace(/\\/g, '＼')
+        //         .replace(/"/g, '＂');
 
         // 4. 构造新的漂流瓶对象
         const newBottle = {
