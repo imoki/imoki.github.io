@@ -2,9 +2,9 @@
 // 读“密钥文件” - 仅读（只读链接） - 带密码（KEY_READ_KEY，默认：imoki），源链接：https://netcut.cn/imoki_key_read
 const NETCUT_KEY_READ = "https://netcut.cn/p/198ff0887be153df"  
 // 读“仅读文件” - 仅读（只读链接） - 带密码（DATA_READ_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_read
-const NETCUT_DATA_READ = "https://netcut.cn/p/d270347e14a3ad28"
-// 写“仅写文件” - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki2_data_write
-const NETCUT_DATA_WRITE = "https://netcut.cn/imoki2_data_write"
+const NETCUT_DATA_READ = "https://netcut.cn/p/8d7bd7135b09ed43"
+// 写“仅写文件” - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_write
+const NETCUT_DATA_WRITE = "https://netcut.cn/imoki3_data_write"
 
 // （可变可不变）
 // 前端内置密钥 - 需要与金山文档后端中的前端密码一致

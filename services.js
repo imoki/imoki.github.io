@@ -16,9 +16,9 @@
 // 读密钥文件 - 仅读（只读链接） - 带密码（KEY_READ_KEY，默认：imoki），源链接：https://netcut.cn/imoki_key_read
 const NETCUT_KEY_READ = "https://netcut.cn/p/198ff0887be153df"  
 // 读数据文件 - 仅读（只读链接） - 带密码（DATA_READ_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_read
-const NETCUT_DATA_READ = "https://netcut.cn/p/d270347e14a3ad28"
-// 写数据文件 - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki2_data_write
-const NETCUT_DATA_WRITE = "https://netcut.cn/imoki2_data_write"
+const NETCUT_DATA_READ = "https://netcut.cn/p/8d7bd7135b09ed43"
+// 写数据文件 - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_write
+const NETCUT_DATA_WRITE = "https://netcut.cn/imoki3_data_write"
 
 // （可变可不变）
 // 前端内置密钥 - 前后端密码一致
@@ -793,7 +793,7 @@ function keyCreate(algorithm) {
 function keyRefresh() {
   // 将新加密密钥重写进密钥文件、将密钥记录到金山文档表格中
   key = getPassword("data_read", getKeyConfig());  // 先保存上一次密码到全局变量中，以便能解读文件
-  console.log("🔓️ 旧密钥密文：", key)
+  console.log("🔓️ 旧仅读密钥明文：", key)
   // console.log(key)
   // 密码生成
   algorithm = 'BMAS'
@@ -891,6 +891,7 @@ function strTojson(note_content) {
 function data_write_handle() {
   // 获取“仅写文件”密码
   key = getPassword("data_write", getKeyConfig())
+  console.log("🔓️ 旧仅写密钥明文：", key)
   // console.log(key)
   // 读取“仅写文件”数据、清空文件数据
   message = []
