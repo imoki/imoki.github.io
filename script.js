@@ -3,8 +3,8 @@
 const NETCUT_KEY_READ = "https://netcut.cn/p/198ff0887be153df"  
 // 读“仅读文件” - 仅读（只读链接） - 带密码（DATA_READ_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_read
 const NETCUT_DATA_READ = "https://netcut.cn/p/d270347e14a3ad28"
-// 写“仅写文件” - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_write
-const NETCUT_DATA_WRITE = "https://netcut.cn/imoki_data_write"
+// 写“仅写文件” - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki2_data_write
+const NETCUT_DATA_WRITE = "https://netcut.cn/imoki2_data_write"
 
 // （可变可不变）
 // 前端内置密钥 - 需要与金山文档后端中的前端密码一致
@@ -162,7 +162,8 @@ async function writeNecutData(url, note_pwd, note_content){
     formData.append('note_content', note_content);
     formData.append('note_token', note_token); 
     formData.append('note_pwd', note_pwd);
-    formData.append('expire_time', 94608000);  // 设置网络剪贴板有效期三年
+    // formData.append('expire_time', 94608000);  // 设置网络剪贴板有效期三年
+    formData.append('expire_time', 259200); // 三天
     // console.log(formData)
     // console.log(formData.toString()); 
     
@@ -274,7 +275,8 @@ async function addNecutData(url, note_pwd, message){
     formData.append('note_content', note_content);
     formData.append('note_token', note_token); 
     formData.append('note_pwd', note_pwd);
-    formData.append('expire_time', 94608000);  // 设置网络剪贴板有效期三年
+    // formData.append('expire_time', 94608000);  // 设置网络剪贴板有效期三年
+    formData.append('expire_time', 259200); // 三天
     // console.log(formData)
     // console.log(formData.toString()); 
     
@@ -476,8 +478,10 @@ async function fetchBottles_nocache() {
 async function fetchBottles() {
     // console.log("✨ 获取漂流瓶数据");
     
-    // 如果缓存有效且未过期，直接返回缓存数据
-    if (cachedBottles && Date.now() - lastFetchTime < CACHE_DURATION) {
+    // // 如果缓存有效且未过期，直接返回缓存数据
+    // if (cachedBottles && Date.now() - lastFetchTime < CACHE_DURATION) {
+    // 如果有缓存则返回缓存数据
+    if (cachedBottles) {
         // console.log('🚀 使用缓存数据');
         return cachedBottles;
     }

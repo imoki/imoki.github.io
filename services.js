@@ -7,7 +7,7 @@
     
     脚本名称：services.js
     脚本兼容: airsript 1.0、airscript 2.0
-    更新时间：20250418
+    更新时间：20250420
     脚本：金山文档漂流瓶后端处理程序。解决金山文档跨域问题，具备自动密钥分配，自动数据处理等功能，密钥以密文形式存储于金山文档中。
     说明：此脚本运行在金山云文档中，将其加入到定时任务中，每隔指定时间即可更新漂流瓶数据。
 */
@@ -17,8 +17,8 @@
 const NETCUT_KEY_READ = "https://netcut.cn/p/198ff0887be153df"  
 // 读数据文件 - 仅读（只读链接） - 带密码（DATA_READ_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_read
 const NETCUT_DATA_READ = "https://netcut.cn/p/d270347e14a3ad28"
-// 写数据文件 - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki_data_write
-const NETCUT_DATA_WRITE = "https://netcut.cn/imoki_data_write"
+// 写数据文件 - 写（剪贴板链接） - 带密码（DATA_WRITE_KEY，默认：imoki），源链接：https://netcut.cn/imoki2_data_write
+const NETCUT_DATA_WRITE = "https://netcut.cn/imoki2_data_write"
 
 // （可变可不变）
 // 前端内置密钥 - 前后端密码一致
@@ -553,7 +553,9 @@ function writeNecutData(url, note_pwd, note_content, note_pwd_new){
         'note_content': note_content,
         'note_token': note_token,
         'note_pwd': note_pwd,
-        'expire_time': 94608000,
+        // 'expire_time': 94608000, // 三年
+        // 'expire_time': 86400,  // 一天
+        'expire_time': 259200,  // 三天
       }
     } else {
       data = {
@@ -562,7 +564,8 @@ function writeNecutData(url, note_pwd, note_content, note_pwd_new){
         'note_content': note_content,
         'note_token': note_token,
         'note_pwd': note_pwd,
-        'expire_time': 94608000,
+        // 'expire_time': 94608000,
+        'expire_time': 259200,  // 三天
       }
     }
     
@@ -906,10 +909,16 @@ function data_write_handle() {
   note_content = strTojson(note_content)
   // console.log(workUsedRowEnd)
   // console.log(note_content.length)
+  let count = 0
   for(let i = 0; i < note_content.length; i++) {
-    row = workUsedRowEnd + 1 + i  // 从不存在数据的地方开始写入数据
+    row = workUsedRowEnd + 1 + count  // 从不存在数据的地方开始写入数据
     timestamp = note_content[i]["timestamp"]
     message = note_content[i]["message"]
+    if (message == "") {
+      // console.log("为空跳过")
+      continue
+    }
+    count++;  // 往下一行走
     if(version == 1){
       // airscipt 1.0
       Application.Range(colNum[0] + row).Value = timestamp // 时间
