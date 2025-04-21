@@ -1,13 +1,13 @@
 // （需要修改的部分）
-const username = 'imoki';           // github 用户名
-const repo = 'imoki.github.io';     // github page 仓库名
+const OWNER = 'imoki';           // github 用户名，仓库所有者
+const REPO = 'imoki.github.io';     // github page 仓库名
 
 // （以下不需要修改）
 const TYPE = "博客" // 系统类型，用于区分不同系统
 const CONFIG = "[" + TYPE + "_配置]" // 配置标识
 const ARTICLE = "[" + TYPE + "_文章]" // 文章标识
 const ARTICLE_ABSTRACT_NUM = 20;    // 文章摘要字数，设置为 0 不显示摘要
-const apiUrl = `https://api.kkgithub.com/repos/${username}/${repo}/issues`; // 接口地址
+const apiUrl = `https://api.kkgithub.com/repos/${OWNER}/${REPO}/issues`; // 接口地址
 
 // 开关变量，设置为 true 使用模拟数据，设置为 false 使用真实的 GitHub API 数据
 const USE_MOCK_DATA = false;
@@ -38,7 +38,7 @@ const mockIssues = [
         // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者"}'
         body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" }}'
     }
-].filter(issue => issue.user && issue.user.login === username);
+].filter(issue => issue.user && issue.user.login === OWNER);
 
 // 获取容器元素
 const summariesContainer = document.getElementById('blog-summaries');
@@ -194,6 +194,7 @@ function renderSummaries_noimage(issues) {
 /**
  * 渲染文章概要列表
  * @param {Array} issues - 文章列表数据
+ * 文章内容为空也不进行显示
  */
 function renderSummaries(issues) {
     summariesContainer.innerHTML = '';
