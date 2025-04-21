@@ -625,6 +625,7 @@ function getNetcutInfo(url, note_pwd){
     );
     
     resp = resp.json()
+    // {"status":0,"error":"服务器负载过高，业务处理失败，请稍后重试"}
     // console.log(resp);
     note_id = resp["data"]["note_id"]
     note_name = resp["data"]["note_name"]  

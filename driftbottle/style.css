@@ -1,0 +1,304 @@
+/* 消息提示样式 */
+.toast {
+    position: fixed;
+    top: 20px; /* 调整到页面顶部 */
+    left: 50%; /* 水平居中 */
+    /* 右下角 */
+    /* bottom: 20px; */ 
+    /* right: 20px; */
+    transform: translateX(-50%) translateY(20px); /* 初始偏移 */
+    background: #4caf50; /* 绿色背景 */
+    color: white;
+    padding: 15px 30px; /* 增大内边距 */
+    border-radius: 25px; /* 增大圆角 */
+    font-size: 16px; /* 增大字体 */
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1); /* 增大阴影效果 */
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0); /* 移动到目标位置 */
+}
+
+/* 基础样式 */
+body {
+    background: linear-gradient(180deg, #e6f7ff 0%, #b3e0ff 100%);
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 漂流瓶元素样式 */
+.bottle {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0, 120, 200, 0.1);
+    transition: transform 0.3s ease;
+    border: 2px solid #4dabf7;
+}
+
+.bottle:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 120, 200, 0.2);
+}
+
+/* 输入框样式 */
+#newBottle {
+    width: 100%;
+    height: 120px;
+    padding: 15px;
+    border: 2px solid #4dabf7;
+    border-radius: 10px;
+    font-size: 16px;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+#newBottle:focus {
+    border-color: #228be6;
+    outline: none;
+}
+
+/* 按钮样式 */
+.action-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 5px;
+    box-shadow: 0 4px 15px rgba(0, 120, 200, 0.2);
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 120, 200, 0.3);
+    opacity: 0.9;
+}
+
+/* 动态波浪效果 */
+.wave-layer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg"><path fill="%234dabf7" d="M0 10 C20 0 40 20 60 10 S100 0 100 10 V20 H0 Z"/></svg>');
+    animation: wave 12s infinite linear;
+    opacity: 0.3;
+    z-index: 0;
+}
+
+@keyframes wave {
+    0% { background-position-x: 0; }
+    100% { background-position-x: 100vw; }
+}
+
+/* 漂浮瓶子动画 */
+.bottle-icon {
+    position: absolute;
+    font-size: 32px;
+    animation: float 4s ease-in-out infinite;
+    opacity: 0.2;
+    z-index: 0;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 10px;
+    }
+    
+    #newBottle {
+        height: 100px;
+    }
+    
+    .action-button {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+}
+
+/* 信封样式 */
+.envelope-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    min-width: 600px;
+    max-width: 90%;
+}
+
+.envelope {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transform: scale(0.8);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.envelope.open {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.envelope-header {
+    background: #4dabf7;
+    padding: 15px 20px;
+    border-radius: 12px 12px 0 0;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.envelope-header span {
+    font-size: 18px;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.envelope-body {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+.message-content {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.reply-section {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: flex-end; /* 按钮组靠右对齐 */
+    gap: 12px; /* 按钮间距 */
+}
+
+.reply-button {
+    padding: 10px 24px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* 按钮具体样式 */
+#sendReply {
+    background: linear-gradient(135deg, #83d667 0%, #67C23A 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
+    transition: all 0.3s ease;
+}
+
+#reCatch {
+    background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(77, 171, 247, 0.3);
+}
+
+/* 悬停效果 */
+#sendReply:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(103, 194, 58, 0.4);
+}
+
+#reCatch:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(77, 171, 247, 0.4);
+}
+
+.reply-input {
+    width: 95%;
+    height: 100px;
+    padding: 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    resize: none; /* 禁止调整大小 */
+    overflow-y: auto; /* 启用滚动条 */
+}
+
+/* 扔漂流瓶按钮 - 橙色系 */
+#throwButton {
+    background: linear-gradient(135deg, #ff9f4a 0%, #ff6b6b 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+#throwButton:hover {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff9f4a 100%);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* 捞漂流瓶按钮 - 蓝色系 */
+#catchButton {
+    background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(77, 171, 247, 0.3);
+}
+
+#catchButton:hover {
+    background: linear-gradient(135deg, #228be6 0%, #4dabf7 100%);
+    box-shadow: 0 6px 20px rgba(77, 171, 247, 0.4);
+}
+
+#throwButton, 
+#catchButton {
+    float: right;
+    margin-left: 10px;
+}
+
+/* 清除浮动 */
+#bottles::after {
+    content: '';
+    display: table;
+    clear: both;
+}

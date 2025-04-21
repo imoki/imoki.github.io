@@ -1,37 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>基于金山文档的漂流瓶项目</title>
-    <style>
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的博客</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+    <!-- 引入 marked 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>🌊 金山漂流瓶</h1>
-        <!-- 扔漂流瓶区域 -->
-        <div>
-            <textarea id="newBottle" placeholder="写下你的漂流瓶..."></textarea>
-            <!-- <button class="el-button el-button--primary" onclick="throwBottle()">扔出漂流瓶</button> -->
-
-            <button id="catchButton" class="action-button">捞漂流瓶</button>
-            <button id="throwButton" class="action-button">扔漂流瓶</button>
-
-            <div id="bottles"></div>
-            <!-- <div id="error" class="error"></div> -->
-            <!-- 消息提示容器 -->
-            <div id="toast" class="toast"></div>
+    <!-- 导航条 -->
+    <nav class="navbar">
+        <a class="nav-item active" id="home-nav">首页</a>
+    </nav>
+    <div class="main-container">
+        <!-- 文章概要容器 -->
+        <div id="blog-summaries"></div>
+        <!-- 个人信息侧边栏 -->
+        <div class="sidebar" id="personal-info">
+            <!-- 头像容器 -->
+            <div id="avatar-container"></div>
         </div>
-        <!-- 背景装饰 -->
-        <div class="beach"></div>
-        <div class="wave-layer"></div>
-        <div class="wave-layer"></div>
-        <div class="wave-layer"></div>
     </div>
-
+    <!-- 文章详情容器 -->
+    <div id="blog-detail" style="display: none;"></div>
     <script src="script.js"></script>
 </body>
 </html>
