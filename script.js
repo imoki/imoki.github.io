@@ -1,16 +1,13 @@
-// （需要修改的配置）
-// 替换为你的 GitHub 用户名和仓库名
-const username = 'imoki';
-const repo = 'imoki.github.io';
-// API 地址
-const apiUrl = `https://api.kkgithub.com/repos/${username}/${repo}/issues`;
-
+// （需要修改的部分）
+const username = 'imoki';           // github 用户名
+const repo = 'imoki.github.io';     // github page 仓库名
 
 // （以下不需要修改）
 const TYPE = "博客" // 系统类型，用于区分不同系统
 const CONFIG = "[" + TYPE + "_配置]" // 配置标识
 const ARTICLE = "[" + TYPE + "_文章]" // 文章标识
 const ARTICLE_ABSTRACT_NUM = 20;    // 文章摘要字数，设置为 0 不显示摘要
+const apiUrl = `https://api.kkgithub.com/repos/${username}/${repo}/issues`; // 接口地址
 
 // 开关变量，设置为 true 使用模拟数据，设置为 false 使用真实的 GitHub API 数据
 const USE_MOCK_DATA = false;
@@ -32,14 +29,14 @@ const mockIssues = [
         id: 3,
         title: '[博客_文章]十大火爆的 CMS 系统推荐',
         user: { login: 'imoki' }, // 假设用户名为 imoki
-        body: '在如今的数字时代，拥有一个美观、功能强大的网站对于个人和企业来说至关重要。而选择一个适合自己需求的 CMS 系统，是搭建一个成功网站的关键一步。在本文中，我们将向大家推荐十个火爆的 CMS 系统，帮助你轻松搭建出令人瞩目的网站！<br><br><h3>01 - WordPress</h3>WordPress 是全球最受欢迎的 CMS 系统之一，拥有强大的扩展性和用户友好的界面。它提供了数千个主题和插件，让你可以轻松地创建出个性化的网站。无论你是个人博客、企业网站还是电子商务平台，WordPress 都能满足你的需求。目前，全球超过 30% 的网站都是使用 WordPress 搭建的，这充分证明了它的火爆程度。<br><strong>优点</strong>：主题、插件丰富，简单易用。<br><strong>缺点</strong>：安全性差，过于依赖插件，面向过程开发，二次扩展开发起点高；对于大型门户网站力不从心。<br><br><h3>02 - Joomla</h3>Joomla 是另一个备受推崇的 CMS 系统，它被广泛应用于企业网站和在线社区。Joomla 提供了众多的功能模块，如新闻发布、产品展示和用户管理等，让你的网站可以轻松满足各种需求。与 WordPress 相比，Joomla 的学习曲线稍微陡峭一些，但一旦熟悉了它的使用方法，你会发现它给你带来的丰富功能是无可替代的。<br><strong>缺点</strong>：Joomla 对于初学者来说并不如 WordPress 那样直观，学习难度系数比较大；可用附加组件更少；Joomla 社区比 WordPress 小，因此资源更容易少。<br><br><h3>03 - Drupal</h3>Drupal 是一款高度灵活的 CMS 系统，被广泛应用于大型企业和政府机构的网站。它提供了强大的权限管理和多语言支持，适合需要复杂功能和安全性的网站。尽管 Drupal 的学习曲线较陡峭，但一旦掌握了它的使用技巧，你将会被它的灵活性和扩展性所折服。<br><strong>缺点</strong>：没有一个默认易用的行为，每个站点都需要付出一定的工作量。<br><br><h3>04 - Discuz!</h3>Discuz! 是一款专注于社区建设的 CMS 系统，被广泛应用于论坛、社交网络和问答平台。它提供了丰富的社交功能，如用户管理、帖子发布和私信交流等。Discuz! 的用户群体庞大，拥有活跃的开发者社区，为你的社区网站提供了强大的支持和扩展能力。<br><strong>优点</strong>：完善的功能，易于使用，开源免费，插件扩展丰富。<br><strong>缺点</strong>：安全性问题，兼容性问题，技术支持，学习成本。<br><br><h3>05 - DedeCMS</h3>DedeCMS 是国内知名的 CMS 系统，广泛应用于个人博客和企业网站。它提供了简单易用的后台管理界面和丰富的模板资源。DedeCMS 还拥有强大的 SEO 优化功能，让你的网站能够在搜索引擎中获得更好的排名。无论你是个人创作者还是企业站长，DedeCMS 都能帮助你快速搭建出令人满意的网站。<br><strong>优点</strong>：社区资源丰富，模板丰富。<br><strong>缺点</strong>：安全性差，论坛付费，扩展性差，开始商业收费了！<br><br><h3>06 - PHPCMS</h3>PHPCMS 是一款强大的内容管理系统，广泛应用于企业门户和新闻网站。它提供了丰富的内容管理功能，如文章发布、评论管理和广告投放等。PHPCMS 的模板系统也非常灵活，让你可以轻松创建出独特的网站风格。如果你需要一个功能强大的网站，PHPCMS 绝对是一个值得考虑的选择。<br><strong>优点</strong>：模块化开发，便于扩展，界面美观。<br><strong>缺点</strong>：无技术支持，不适合新手；没有商城功能；采集功能较弱；已经不维护了。<br><br><h3>07 - MetInfo</h3>MetInfo 是一款专注于企业网站建设的 CMS 系统，提供了丰富的企业级功能和模板资源。它的后台管理界面简洁明了，让你可以轻松管理网站内容和用户信息。MetInfo 还拥有强大的 SEO 优化功能，帮助你的企业网站在竞争激烈的市场中脱颖而出。<br><strong>优点</strong>：内置免费版模板，20 多套界面风格，支持自定义模板。<br><strong>缺点</strong>：主题和插件少，商业收费主题相对多。<br><br><h3>08 - Typecho</h3>Typecho 是一款简洁高效的开源 CMS 系统，适合个人博客和小型网站的搭建。它提供了简单易用的后台管理界面和轻量级的代码结构，让你可以专注于内容创作而不用担心繁琐的技术细节。虽然 Typecho 的扩展性相对较弱，但对于需要一个简洁高效的博客平台来说，它是一个绝佳选择。<br><strong>优点</strong>：简单易用，文件体积较小，丰富的主题和插件，安全性较高，社区活跃。<br><strong>缺点</strong>：功能相对有限，文档相对不够完善，主题和插件相对较少，更新速度相对较慢。<br><br><h3>09 - ThinkCMF</h3>ThinkCMF 是一款全面的企业级 CMS 系统，提供了丰富的企业级功能和模板资源。它拥有强大的权限管理和多语言支持，适合大型企业和政府机构的网站建设。ThinkCMF 的后台管理界面直观易用，让你可以轻松管理网站内容和用户信息。<br><strong>优点</strong>：丰富的开发工具和模块，安全性较高，社区支持广泛。<br><strong>缺点</strong>：学习需要一定的时间和精力，文档不够完善，功能扩展有限，用户群体较小。<br><br><h3>10 - Z - Blog</h3>Z - Blog 是一款专注于个人博客的 CMS 系统，提供了简单易用的后台管理界面和丰富的主题资源。它的安装和配置非常简单，让你可以快速搭建个人博客并分享你的知识和经验。如果你是一个热爱写作的人，Z - Blog 绝对是一个值得尝试的选择。<br><strong>优点</strong>：开源免费，简单易用，丰富的功能模块，模板丰富，支持插件扩展。<br><strong>缺点</strong>：支持插件扩展，社区支持有限，模板和插件定制性相对较差。<br><br><h3>总结</h3>在本文中，我们向大家分享了十个火爆的 CMS 系统，每个 CMS 系统都有自己的特点和适用场景，你可以根据自己的需求选择最适合的系统来搭建出令人瞩目的网站。无论是个人博客、企业网站还是社区平台，这些 CMS 系统都能帮助你实现你的梦想！快来选择一个适合你的 CMS 系统，开始打造你的网站吧！'
+        body: '在如今的数字时代，拥有一个美观、功能强大的网站对于个人和企业来说至关重要。而选择一个适合自己需求的 CMS 系统，是搭建一个成功网站的关键一步。在本文中，我们将向大家推荐十个火爆的 CMS 系统，帮助你轻松搭建出令人瞩目的网站！<br><br><h3>01 - WordPress</h3>WordPress 是全球最受欢迎的 CMS 系统之一，拥有强大的扩展性和用户友好的界面。它提供了数千个主题和插件，让你可以轻松地创建出个性化的网站。无论你是个人博客、企业网站还是电子商务平台，WordPress 都能满足你的需求。目前，全球超过 30% 的网站都是使用 WordPress 搭建的，这充分证明了它的火爆程度。<br><strong>优点</strong>：主题、插件丰富，简单易用。<br><strong>缺点</strong>：安全性差，过于依赖插件，面向过程开发，二次扩展开发起点高；对于大型门户网站力不从心。<br><br><h3>02 - Joomla</h3>Joomla 是另一个深受推崇的 CMS 系统，它被广泛应用于企业网站和在线社区。Joomla 提供了众多的功能模块，如新闻发布、产品展示和用户管理等，让你的网站可以轻松满足各种需求。与 WordPress 相比，Joomla 的学习曲线稍微陡峭一些，但一旦熟悉了它的使用方法，你会发现它给你带来的丰富功能是无可替代的。<br><strong>缺点</strong>：Joomla 对于初学者来说并不如 WordPress 那样直观，学习难度系数比较大；可用附加组件更少；Joomla 社区比 WordPress 小，因此资源更容易少。<br><br><h3>03 - Drupal</h3>Drupal 是一款高度灵活的 CMS 系统，被广泛应用于大型企业和政府机构的网站。它提供了强大的权限管理和多语言支持，适合需要复杂功能和安全性的网站。尽管 Drupal 的学习曲线较陡峭，但一旦掌握了它的使用技巧，你将会被它的灵活性和扩展性所折服。<br><strong>缺点</strong>：没有一个默认易用的行为，每个站点都需要付出一定的工作量。<br><br><h3>04 - Discuz!</h3>Discuz! 是一款专注于社区建设的 CMS 系统，被广泛应用于论坛、社交网络和问答平台。它提供了丰富的社交功能，如用户管理、帖子发布和私信交流等。Discuz! 的用户群体庞大，拥有活跃的开发者社区，为你的社区网站提供了强大的支持和扩展能力。<br><strong>优点</strong>：完善的功能，易于使用，开源免费，插件扩展丰富。<br><strong>缺点</strong>：安全性问题，兼容性问题，技术支持，学习成本。<br><br><h3>05 - DedeCMS</h3>DedeCMS 是国内知名的 CMS 系统，广泛应用于个人博客和企业网站。它提供了简单易用的后台管理界面和丰富的模板资源。DedeCMS 还拥有强大的 SEO 优化功能，让你的网站能够在搜索引擎中获得更好的排名。无论你是个人创作者还是企业站长，DedeCMS 都能帮助你快速搭建出令人满意的网站。<br><strong>优点</strong>：社区资源丰富，模板丰富。<br><strong>缺点</strong>：安全性差，论坛付费，扩展性差，开始商业收费了！<br><br><h3>06 - PHPCMS</h3>PHPCMS 是一款强大的内容管理系统，广泛应用于企业门户和新闻网站。它提供了丰富的内容管理功能，如文章发布、评论管理和广告投放等。PHPCMS 的模板系统也非常灵活，让你可以轻松创建出独特的网站风格。如果你需要一个功能强大的网站，PHPCMS 绝对是一个值得考虑的选择。<br><strong>优点</strong>：模块化开发，便于扩展，界面美观。<br><strong>缺点</strong>：无技术支持，不适合新手；没有商城功能；采集功能较弱；已经不维护了。<br><br><h3>07 - MetInfo</h3>MetInfo 是一款专注于企业网站建设的 CMS 系统，提供了丰富的企业级功能和模板资源。它的后台管理界面简洁明了，让你可以轻松管理网站内容和用户信息。MetInfo 还拥有强大的 SEO 优化功能，帮助你的企业网站在竞争激烈的市场中脱颖而出。<br><strong>优点</strong>：内置免费版模板，20 多套界面风格，支持自定义模板。<br><strong>缺点</strong>：主题和插件少，商业收费主题相对多。<br><br><h3>08 - Typecho</h3>Typecho 是一款简洁高效的开源 CMS 系统，适合个人博客和小型网站的搭建。它提供了简单易用的后台管理界面和轻量级的代码结构，让你可以专注于内容创作而不用担心繁琐的技术细节。虽然 Typecho 的扩展性相对较弱，但对于需要一个简洁高效的博客平台来说，它是一个绝佳选择。<br><strong>优点</strong>：简单易用，文件体积较小，丰富的主题和插件，安全性较高，社区活跃。<br><strong>缺点</strong>：功能相对有限，文档相对不够完善，主题和插件相对较少，更新速度相对较慢。<br><br><h3>09 - ThinkCMF</h3>ThinkCMF 是一款全面的企业级 CMS 系统，提供了丰富的企业级功能和模板资源。它拥有强大的权限管理和多语言支持，适合大型企业和政府机构的网站建设。ThinkCMF 的后台管理界面直观易用，让你可以轻松管理网站内容和用户信息。<br><strong>优点</strong>：丰富的开发工具和模块，安全性较高，社区支持广泛。<br><strong>缺点</strong>：学习需要一定的时间和精力，文档不够完善，功能扩展有限，用户群体较小。<br><br><h3>10 - Z - Blog</h3>Z - Blog 是一款专注于个人博客的 CMS 系统，提供了简单易用的后台管理界面和丰富的主题资源。它的安装和配置非常简单，让你可以快速搭建个人博客并分享你的知识和经验。如果你是一个热爱写作的人，Z - Blog 绝对是一个值得尝试的选择。<br><strong>优点</strong>：开源免费，简单易用，丰富的功能模块，模板丰富，支持插件扩展。<br><strong>缺点</strong>：支持插件扩展，社区支持有限，模板和插件定制性相对较差。<br><br><h3>总结</h3>在本文中，我们向大家分享了十个火爆的 CMS 系统，每个 CMS 系统都有自己的特点和适用场景，你可以根据自己的需求选择最适合的系统来搭建出令人瞩目的网站。无论是个人博客、企业网站还是社区平台，这些 CMS 系统都能帮助你实现你的梦想！快来选择一个适合你的 CMS 系统，开始打造你的网站吧！'
     },
     {
         id: 4,
         title: "[博客_配置]",
         user: { login: 'imoki' }, // 假设用户名为 imoki
         // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者"}'
-        body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "https://img.loliapi.cn/i/pp/img170.webp" }}'
+        body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" }}'
     }
 ].filter(issue => issue.user && issue.user.login === username);
 
@@ -59,6 +56,28 @@ homeNav.addEventListener('click', (e) => {
     detailContainer.style.display = 'none';
     personalInfoContainer.style.display = 'block';
 });
+
+// 定义首页点击处理函数
+function handleHomeClick(event) {
+    event.preventDefault(); // 阻止默认跳转行为
+    const homeNav = document.getElementById('home-nav');
+    // 添加点击时的样式变化，这里可以根据需求修改
+    homeNav.style.backgroundColor = '#66b1ff'; 
+    homeNav.style.transform = 'scale(0.95)';
+
+    // 一段时间后恢复样式
+    setTimeout(() => {
+        homeNav.style.backgroundColor = ''; 
+        homeNav.style.transform = '';
+    }, 300);
+
+    // 显示文章概要，隐藏文章详情
+    const summariesContainer = document.getElementById('blog-summaries');
+    const detailContainer = document.getElementById('blog-detail');
+    summariesContainer.style.display = 'block';
+    detailContainer.style.display = 'none';
+}
+
 
 async function fetchData() {
     // 定义正则表达式，用于匹配 [博客_xxx] 格式的标题
@@ -172,6 +191,10 @@ function renderSummaries_noimage(issues) {
     });
 }
 
+/**
+ * 渲染文章概要列表
+ * @param {Array} issues - 文章列表数据
+ */
 function renderSummaries(issues) {
     summariesContainer.innerHTML = '';
     issues.forEach((issue, index) => {
@@ -191,23 +214,30 @@ function renderSummaries(issues) {
         textContainer.style.flex = 1; 
 
         // 创建文章图片元素
+        let imgSrc = '';
         if (window.articleImages && window.articleImages[issue.title]) {
-            const imgElement = document.createElement('img');
-            imgElement.src = window.articleImages[issue.title];
-            imgElement.alt = issue.title;
-            // 限制图片最大宽度和高度
-            imgElement.style.maxWidth = '30%'; 
-            imgElement.style.maxHeight = '200px'; 
-            imgElement.style.objectFit = 'cover'; 
+            imgSrc = window.articleImages[issue.title];
+        } else {
+            // 生成 1 到 200 之间的随机数
+            const randomNum = Math.floor(Math.random() * 200) + 1;
+            imgSrc = `https://img.loliapi.cn/i/pp/img${randomNum}.webp`;
+        }
 
-            // 根据索引判断图片显示位置
-            if (index % 2 === 0) {
-                imgElement.classList.add('left-image');
-                summaryElement.prepend(imgElement); // 将图片添加到容器开头
-            } else {
-                imgElement.classList.add('right-image');
-                summaryElement.appendChild(imgElement);
-            }
+        const imgElement = document.createElement('img');
+        imgElement.src = imgSrc;
+        imgElement.alt = issue.title;
+        // 限制图片最大宽度和高度
+        imgElement.style.maxWidth = '30%'; 
+        imgElement.style.maxHeight = '200px'; 
+        imgElement.style.objectFit = 'cover'; 
+
+        // 根据索引判断图片显示位置
+        if (index % 2 === 0) {
+            imgElement.classList.add('left-image');
+            summaryElement.prepend(imgElement); // 将图片添加到容器开头
+        } else {
+            imgElement.classList.add('right-image');
+            summaryElement.appendChild(imgElement);
         }
 
         // 创建文章标题元素
@@ -272,4 +302,5 @@ function showDetail(issue) {
     detailContainer.appendChild(titleElement);
     detailContainer.appendChild(contentElement);
 }
+
 init();

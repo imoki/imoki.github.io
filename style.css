@@ -9,25 +9,19 @@ body {
 
 /* 导航条样式 */
 .navbar {
-  background-color: #409EFF; /* Element UI 主色调 */
+  background-color: #409EFF; 
   overflow: hidden;
   display: flex;
   align-items: center;
   padding: 15px 30px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  justify-content: space-between; /* 让标题和导航项分开 */
 }
 
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 25px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.avatar:hover {
-  transform: scale(1.1); /* 鼠标悬停放大动画 */
+.nav-title {
+  color: white;
+  margin: 0;
+  font-size: 24px;
 }
 
 .nav-item {
@@ -37,7 +31,7 @@ body {
   text-decoration: none;
   font-size: 18px;
   border-radius: 4px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease; /* 添加过渡效果 */
 }
 
 .nav-item:hover {
