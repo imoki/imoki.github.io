@@ -6,11 +6,11 @@
     公众号：默库
     
     脚本名称：services.js
-    脚本兼容: airscript 2.0
-    更新时间：20250421
+    脚本兼容: airscript 1.0
+    更新时间：20250422
     脚本：金山文档博客系统后端处理程序。解决金山文档跨域问题，文章发布功能。
     说明：将services.js脚本复制到金山文档Airscript脚本编辑器中，添加网络API。
-          首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后运行services.js脚本即可更新成功。 
+          首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后，再运行services.js脚本即可更新成功。 
     “GITHUB TOKEN”获取方式：在 https://github.com/settings/tokens 选择 “Generate new token (classic) “生成token 
           */
 
@@ -627,16 +627,16 @@ function middleUpdateConfig() {
   // 文章封面处理
   readArticleImage()
   // console.log(MiddleLayerConfigMessage)
-  if(MiddleLayerConfigConsistency) {
+  if (MiddleLayerConfigConsistency) {
     // console.log("✨️ 开始更新中间层配置")
     // 需要更新配置
     target = CONFIG
     COMMENT_ID = getIssuesTarget(OWNER, target)
-    if(COMMENT_ID != -1) {
+    if (COMMENT_ID != -1) {
       // 已存在，则更新
       console.log("✨ 更新中间层配置")
       // console.log(COMMENT_ID)
-      content = JSON.stringify(MiddleLayerConfigMessage); // 转字符串
+      content = JSON.stringify(MiddleLayerConfigMessage); // json转字符串
       updateIssues(COMMENT_ID, content)
     } else {
       console.log("🎉 添加中间层配置")
@@ -690,7 +690,16 @@ function middleUpdateArticle(){
       // 无对应文章，且发布状态为“发布”或空，则发文章
       if (publishStatus == "发布" ||  publishStatus == "" || publishStatus == "undefined" || publishStatus == undefined) {
         console.log("🎉 发布文章：", title)
-        postIssues(title, content)
+        // 查询是否有已存在的issue标题，有则直接修改文章内容，没有则创建
+        COMMENT_ID = getIssuesTarget(OWNER, title)
+        if (COMMENT_ID != -1) {
+          // 存在issue，修改文章内容
+          updateIssues(COMMENT_ID, content)
+        } else {
+          // 不存在issue，直接发布新issue
+          postIssues(title, content)
+        }
+        
       } else if (publishStatus == "不发布") {
         console.log("🔥 删除文章：", title)
         // 发布状态为“不发布”，则删除文章
