@@ -1,307 +1,832 @@
+/*
+    作者: 无盐七
+    仓库: https://github.com/imoki/
+    B站：https://space.bilibili.com/3546828310055281
+    QQ群：963592267
+    公众号：默库
+    
+    脚本名称：services.js
+    脚本兼容: airscript 1.0
+    更新时间：20250422
+    脚本：金山文档博客系统后端处理程序。解决金山文档跨域问题，文章发布功能。
+    说明：将services.js脚本复制到金山文档Airscript脚本编辑器中，添加网络API。
+          首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后，再运行services.js脚本即可更新成功。 
+    “GITHUB TOKEN”获取方式：在 https://github.com/settings/tokens 选择 “Generate new token (classic) “生成token 
+          */
+
 // （需要修改的部分）
 const OWNER = 'imoki';           // github 用户名，仓库所有者
 const REPO = 'imoki.github.io';     // github page 仓库名
 
-// （以下不需要修改）
+// ================================全局变量开始================================
 const TYPE = "博客" // 系统类型，用于区分不同系统
 const CONFIG = "[" + TYPE + "_配置]" // 配置标识
 const ARTICLE = "[" + TYPE + "_文章]" // 文章标识
 const ARTICLE_ABSTRACT_NUM = 20;    // 文章摘要字数，设置为 0 不显示摘要
-const apiUrl = `https://api.kkgithub.com/repos/${OWNER}/${REPO}/issues`; // 接口地址
 
-// 开关变量，设置为 true 使用模拟数据，设置为 false 使用真实的 GitHub API 数据
-const USE_MOCK_DATA = false;
-// 模拟数据
-const mockIssues = [
+// 配置 - 中间层配置处理
+var MiddleLayerConfigConsistency = false; //  是否需要修改中间层，true为需要修改，否则为不修改
+var MiddleLayerConfigMessage = {"name": "imoki", "avatar": "", "bio": "", "articleImages": {}}
+// 配置
+var sheetNameConfig = "配置"  // 配置表
+var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.kkgithub.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
+// 文章
+var sheetNameArticle = "文章"; // 存储表名称
+var contentArticle = [["标题", "内容" ,"封面（可不填）", "一致性校验（自动生成）" ,"发布状态（可不填，默认为发布）","类别（可不填）", "标签（可不填）"]]; // 数据表头
+
+// 表中激活的区域的行数和列数
+var row = 0;
+var col = 0;
+var maxRow = 100; // 规定最大行
+var maxCol = 26; // 规定最大列
+var workbook = [] // 存储已存在表数组
+var colNum = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+var version = 1 // 版本类型，自动识别并适配。默认为airscript 1.0，否则为2.0（Beta）
+// ================================全局变量结束================================
+
+// ======================生成表修改相关开始======================
+// 延迟，单位秒
+function sleep(d) {
+  for (var t = Date.now(); Date.now() - t <= d; );
+}
+
+// 判断表格行列数，并记录目前已写入的表格行列数。目的是为了不覆盖原有数据，便于更新
+function determineRowCol() {
+  for (let i = 1; i < maxRow; i++) {
+    let content = Application.Range("A" + i).Text
+    if (content == "")  // 如果为空行，则提前结束读取
     {
-        id: 1,
-        title: '[博客_文章]Web 开发技术的前世今生',
-        user: { login: 'imoki' }, // 假设用户名为 imoki
-        body: '在当今数字化的时代，Web 开发技术如同一场永不停歇的变革浪潮，不断推动着互联网的发展。<br><br><h3>早期 Web 开发（静态页面时代）</h3>在 Web 诞生之初，页面主要是静态的，使用简单的 HTML 标记语言来构建。那时的网页内容固定，缺乏交互性。<br>例如，最早的网站仅仅是一些文字和简单的图片展示，用于传递基本的信息。<br><br><h3>动态网页的兴起（CGI 时代）</h3>随着互联网的发展，用户对网页的交互性需求越高越高。于是，CGI（Common Gateway Interface）技术应运而生。<br>通过 CGI，服务器可以根据用户的请求动态生成页面内容，实现了简单的交互功能。<br><br><h3>Web 2.0 时代（AJAX 与前端框架）</h3>Web 2.0 标志着互联网从单纯的信息获取向互动和参与转变。AJAX（Asynchronous JavaScript and XML）技术的出现，使得网页可以在不刷新的情况下与服务器进行数据交互。<br>随后，各种前端框架如 jQuery、Angular、React 和 Vue.js 相继诞生，大大提高了前端开发的效率和用户体验。<br><br><h3>现代 Web 开发（全栈与微服务）</h3>如今，Web 开发已经进入了全栈和微服务的时代。开发者需要掌握前端、后端和数据库等多方面的知识。<br>微服务架构将一个大型应用拆分成多个小型服务，提高了系统的可维护性和扩展性。<br><br>总之，Web 开发技术的发展历程是一部不断创新和进步的历史，未来也将继续朝着更加智能、高效和便捷的方向发展。'
-    },
-    {
-        id: 2,
-        title: '[博客_文章]人工智能在医疗领域的应用与挑战',
-        user: { login: 'imoki' }, // 假设用户名为 imoki
-        body: '人工智能（AI）作为当今科技领域的热门话题，正逐渐渗透到各个行业，医疗领域也不例外。<br><br><h3>应用场景</h3><h4>疾病诊断</h4>AI 可以通过分析医学影像（如 X 光、CT 等）来辅助医生进行疾病诊断。例如，深度学习算法可以识别影像中的病变特征，提高诊断的准确性和效率。<br><br><h4>药物研发</h4>在药物研发过程中，AI 可以帮助科学家筛选潜在的药物靶点，预测药物的疗效和副作用，从而加速药物研发的进程。<br><br><h4>健康管理</h4>通过智能穿戴设备收集用户的健康数据，AI 可以为用户提供个性化的健康建议和预警，帮助用户预防疾病。<br><br><h3>挑战与问题</h3><h4>数据隐私与安全</h4>医疗数据涉及到患者的隐私，如何确保 AI 系统在处理和存储这些数据时的安全性和隐私性是一个重要的问题。<br><br><h4>算法可解释性</h4>一些复杂的 AI 算法（如深度学习）就像一个“黑匣子”，医生和患者很难理解算法的决策过程，这可能会影响 AI 在医疗领域的信任度和应用。<br><br><h4>法律与伦理问题</h4>当 AI 辅助诊断出现错误时，责任该如何界定？这涉及到一系列的法律和伦理问题，需要进一步的探讨和规范。<br><br>尽管面临诸多挑战，但人工智能在医疗领域的应用前景依然广阔，有望为人类的健康事业带来巨大的变革。'
-    },
-    {
-        id: 3,
-        title: '[博客_文章]十大火爆的 CMS 系统推荐',
-        user: { login: 'imoki' }, // 假设用户名为 imoki
-        body: '在如今的数字时代，拥有一个美观、功能强大的网站对于个人和企业来说至关重要。而选择一个适合自己需求的 CMS 系统，是搭建一个成功网站的关键一步。在本文中，我们将向大家推荐十个火爆的 CMS 系统，帮助你轻松搭建出令人瞩目的网站！<br><br><h3>01 - WordPress</h3>WordPress 是全球最受欢迎的 CMS 系统之一，拥有强大的扩展性和用户友好的界面。它提供了数千个主题和插件，让你可以轻松地创建出个性化的网站。无论你是个人博客、企业网站还是电子商务平台，WordPress 都能满足你的需求。目前，全球超过 30% 的网站都是使用 WordPress 搭建的，这充分证明了它的火爆程度。<br><strong>优点</strong>：主题、插件丰富，简单易用。<br><strong>缺点</strong>：安全性差，过于依赖插件，面向过程开发，二次扩展开发起点高；对于大型门户网站力不从心。<br><br><h3>02 - Joomla</h3>Joomla 是另一个深受推崇的 CMS 系统，它被广泛应用于企业网站和在线社区。Joomla 提供了众多的功能模块，如新闻发布、产品展示和用户管理等，让你的网站可以轻松满足各种需求。与 WordPress 相比，Joomla 的学习曲线稍微陡峭一些，但一旦熟悉了它的使用方法，你会发现它给你带来的丰富功能是无可替代的。<br><strong>缺点</strong>：Joomla 对于初学者来说并不如 WordPress 那样直观，学习难度系数比较大；可用附加组件更少；Joomla 社区比 WordPress 小，因此资源更容易少。<br><br><h3>03 - Drupal</h3>Drupal 是一款高度灵活的 CMS 系统，被广泛应用于大型企业和政府机构的网站。它提供了强大的权限管理和多语言支持，适合需要复杂功能和安全性的网站。尽管 Drupal 的学习曲线较陡峭，但一旦掌握了它的使用技巧，你将会被它的灵活性和扩展性所折服。<br><strong>缺点</strong>：没有一个默认易用的行为，每个站点都需要付出一定的工作量。<br><br><h3>04 - Discuz!</h3>Discuz! 是一款专注于社区建设的 CMS 系统，被广泛应用于论坛、社交网络和问答平台。它提供了丰富的社交功能，如用户管理、帖子发布和私信交流等。Discuz! 的用户群体庞大，拥有活跃的开发者社区，为你的社区网站提供了强大的支持和扩展能力。<br><strong>优点</strong>：完善的功能，易于使用，开源免费，插件扩展丰富。<br><strong>缺点</strong>：安全性问题，兼容性问题，技术支持，学习成本。<br><br><h3>05 - DedeCMS</h3>DedeCMS 是国内知名的 CMS 系统，广泛应用于个人博客和企业网站。它提供了简单易用的后台管理界面和丰富的模板资源。DedeCMS 还拥有强大的 SEO 优化功能，让你的网站能够在搜索引擎中获得更好的排名。无论你是个人创作者还是企业站长，DedeCMS 都能帮助你快速搭建出令人满意的网站。<br><strong>优点</strong>：社区资源丰富，模板丰富。<br><strong>缺点</strong>：安全性差，论坛付费，扩展性差，开始商业收费了！<br><br><h3>06 - PHPCMS</h3>PHPCMS 是一款强大的内容管理系统，广泛应用于企业门户和新闻网站。它提供了丰富的内容管理功能，如文章发布、评论管理和广告投放等。PHPCMS 的模板系统也非常灵活，让你可以轻松创建出独特的网站风格。如果你需要一个功能强大的网站，PHPCMS 绝对是一个值得考虑的选择。<br><strong>优点</strong>：模块化开发，便于扩展，界面美观。<br><strong>缺点</strong>：无技术支持，不适合新手；没有商城功能；采集功能较弱；已经不维护了。<br><br><h3>07 - MetInfo</h3>MetInfo 是一款专注于企业网站建设的 CMS 系统，提供了丰富的企业级功能和模板资源。它的后台管理界面简洁明了，让你可以轻松管理网站内容和用户信息。MetInfo 还拥有强大的 SEO 优化功能，帮助你的企业网站在竞争激烈的市场中脱颖而出。<br><strong>优点</strong>：内置免费版模板，20 多套界面风格，支持自定义模板。<br><strong>缺点</strong>：主题和插件少，商业收费主题相对多。<br><br><h3>08 - Typecho</h3>Typecho 是一款简洁高效的开源 CMS 系统，适合个人博客和小型网站的搭建。它提供了简单易用的后台管理界面和轻量级的代码结构，让你可以专注于内容创作而不用担心繁琐的技术细节。虽然 Typecho 的扩展性相对较弱，但对于需要一个简洁高效的博客平台来说，它是一个绝佳选择。<br><strong>优点</strong>：简单易用，文件体积较小，丰富的主题和插件，安全性较高，社区活跃。<br><strong>缺点</strong>：功能相对有限，文档相对不够完善，主题和插件相对较少，更新速度相对较慢。<br><br><h3>09 - ThinkCMF</h3>ThinkCMF 是一款全面的企业级 CMS 系统，提供了丰富的企业级功能和模板资源。它拥有强大的权限管理和多语言支持，适合大型企业和政府机构的网站建设。ThinkCMF 的后台管理界面直观易用，让你可以轻松管理网站内容和用户信息。<br><strong>优点</strong>：丰富的开发工具和模块，安全性较高，社区支持广泛。<br><strong>缺点</strong>：学习需要一定的时间和精力，文档不够完善，功能扩展有限，用户群体较小。<br><br><h3>10 - Z - Blog</h3>Z - Blog 是一款专注于个人博客的 CMS 系统，提供了简单易用的后台管理界面和丰富的主题资源。它的安装和配置非常简单，让你可以快速搭建个人博客并分享你的知识和经验。如果你是一个热爱写作的人，Z - Blog 绝对是一个值得尝试的选择。<br><strong>优点</strong>：开源免费，简单易用，丰富的功能模块，模板丰富，支持插件扩展。<br><strong>缺点</strong>：支持插件扩展，社区支持有限，模板和插件定制性相对较差。<br><br><h3>总结</h3>在本文中，我们向大家分享了十个火爆的 CMS 系统，每个 CMS 系统都有自己的特点和适用场景，你可以根据自己的需求选择最适合的系统来搭建出令人瞩目的网站。无论是个人博客、企业网站还是社区平台，这些 CMS 系统都能帮助你实现你的梦想！快来选择一个适合你的 CMS 系统，开始打造你的网站吧！'
-    },
-    {
-        id: 4,
-        title: "[博客_配置]",
-        user: { login: 'imoki' }, // 假设用户名为 imoki
-        // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者"}'
-        body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" }}'
+      row = i - 1;  // 记录的是存在数据所在的行
+      break;
     }
-].filter(issue => issue.user && issue.user.login === OWNER);
+  }
+  // 超过最大行了，认为row为0，从头开始
+  let length = colNum.length
+  for (let i = 1; i <= length; i++) {
+    content = Application.Range(colNum[i - 1] + "1").Text
+    if (content == "")  // 如果为空行，则提前结束读取
+    {
+      col = i - 1;  // 记录的是存在数据所在的行
+      break;
+    }
+  }
+  // 超过最大行了，认为col为0，从头开始
+  // console.log("✨ 当前激活表已存在：" + row + "行，" + col + "列")
+}
 
-// 获取容器元素
-const summariesContainer = document.getElementById('blog-summaries');
-const detailContainer = document.getElementById('blog-detail');
-// const searchInput = document.getElementById('search-input');
-const avatarContainer = document.getElementById('avatar-container');
-const personalInfoContainer = document.getElementById('personal-info');
-// 获取首页导航项元素
-const homeNav = document.getElementById('home-nav');
+// 获取当前激活表的表的行列
+function getRowCol() {
+  let row = 0
+  let col = 0
+  for (let i = 1; i < maxRow; i++) {
+    let content = Application.Range("A" + i).Text
+    if (content == "")  // 如果为空行，则提前结束读取
+    {
+      row = i - 1;  // 记录的是存在数据所在的行
+      break;
+    }
+  }
+  // 超过最大行了，认为row为0，从头开始
+  let length = colNum.length
+  for (let i = 1; i <= length; i++) {
+    content = Application.Range(colNum[i - 1] + "1").Text
+    if (content == "")  // 如果为空行，则提前结束读取
+    {
+      col = i - 1;  // 记录的是存在数据所在的行
+      break;
+    }
+  }
+  // 超过最大行了，认为col为0，从头开始
 
-// 为首页导航项添加点击事件
-homeNav.addEventListener('click', (e) => {
-    e.preventDefault(); // 阻止默认的跳转行为
-    summariesContainer.style.display = 'block';
-    detailContainer.style.display = 'none';
-    personalInfoContainer.style.display = 'block';
-});
+  // console.log("✨ 当前激活表已存在：" + row + "行，" + col + "列")
+  return [row, col]
+}
 
-// 定义首页点击处理函数
-function handleHomeClick(event) {
-    event.preventDefault(); // 阻止默认跳转行为
-    const homeNav = document.getElementById('home-nav');
-    // 添加点击时的样式变化，这里可以根据需求修改
-    homeNav.style.backgroundColor = '#66b1ff'; 
-    homeNav.style.transform = 'scale(0.95)';
+// 激活工作表函数
+function ActivateSheet(sheetName) {
+  let flag = 0;
+  try {
+    let sheet = Application.Sheets.Item(sheetName)
+    sheet.Activate()
+    // console.log("🍾 激活工作表：" + sheet.Name)
+    flag = 1;
+  } catch {
+    flag = 0;
+    // console.log("📢 无法激活工作表，工作表可能不存在")
+    // console.log("🪄 创建工作表：" + sheetName)
+    createSheet(sheetName)
+  }
+  return flag;
+}
 
-    // 一段时间后恢复样式
-    setTimeout(() => {
-        homeNav.style.backgroundColor = ''; 
-        homeNav.style.transform = '';
-    }, 300);
+// 统一编辑表函数
+function editConfigSheet(content) {
+  determineRowCol();
+  let lengthRow = content.length
+  let lengthCol = content[0].length
+  if (row == 0) { // 如果行数为0，认为是空表,开始写表头
+    for (let i = 0; i < lengthCol; i++) {
+      if(version == 1){
+        // airscipt 1.0
+        Application.Range(colNum[i] + 1).Value = content[0][i]
+      }else{
+        // airscript 2.0(Beta)
+        Application.Range(colNum[i] + 1).Value2 = content[0][i]
+      }
+      
+    }
 
-    // 显示文章概要，隐藏文章详情
-    const summariesContainer = document.getElementById('blog-summaries');
-    const detailContainer = document.getElementById('blog-detail');
-    summariesContainer.style.display = 'block';
-    detailContainer.style.display = 'none';
+    row += 1; // 让行数加1，代表写入了表头。
+  }
+
+  // 从已写入的行的后一行开始逐行写入数据
+  // 先写行
+  for (let i = 1 + row; i <= lengthRow; i++) {  // 从未写入区域开始写
+    for (let j = 0; j < lengthCol; j++) {
+      if(version == 1){
+        // airscipt 1.0
+        Application.Range(colNum[j] + i).Value = content[i - 1][j]
+      }else{
+        // airscript 2.0(Beta)
+        Application.Range(colNum[j] + i).Value2 = content[i - 1][j]
+      }
+    }
+  }
+  // 再写列
+  for (let j = col; j < lengthCol; j++) {
+    for (let i = 1; i <= lengthRow; i++) {  // 从未写入区域开始写
+      if(version == 1){
+        // airscipt 1.0
+        Application.Range(colNum[j] + i).Value = content[i - 1][j]
+      }else{
+        // airscript 2.0(Beta)
+        Application.Range(colNum[j] + i).Value2 = content[i - 1][j]
+      }
+    }
+  }
+}
+
+// 存储已存在的表
+function storeWorkbook() {
+  // 工作簿（Workbook）中所有工作表（Sheet）的集合,下面两种写法是一样的
+  let sheets = Application.ActiveWorkbook.Sheets
+  sheets = Application.Sheets
+
+  // 打印所有工作表的名称
+  for (let i = 1; i <= sheets.Count; i++) {
+    workbook[i - 1] = (sheets.Item(i).Name)
+    // console.log(workbook[i-1])
+  }
+}
+
+// 判断表是否已存在
+function workbookComp(name) {
+  let flag = 0;
+  let length = workbook.length
+  for (let i = 0; i < length; i++) {
+    if (workbook[i] == name) {
+      flag = 1;
+      // console.log("✨ " + name + "表已存在")
+      console.log("⚡️ 已检测到："+ name + "表")
+      break
+    }
+  }
+  return flag
+}
+
+// 创建表，若表已存在则不创建，直接写入数据
+function createSheet(sheetname) {
+  // const defaultName = Application.Sheets.DefaultNewSheetName
+  // 工作表对象
+  if (!workbookComp(sheetname)) {
+    console.log("🪄 创建工作表：" + sheetname)
+    try{
+        Application.Sheets.Add(
+        null,
+        Application.ActiveSheet.Name,
+        1,
+        Application.Enum.XlSheetType.xlWorksheet,
+        sheetname
+      )
+      
+    }catch{
+      // console.log("😶‍🌫️ 适配airscript 2.0版本")
+      version = 2 // 设置版本为2.0
+      let newSheet = Application.Sheets.Add(undefined, undefined, undefined, xlWorksheet)
+      // let newSheet = Application.Worksheets.Add()
+      newSheet.Name = sheetname
+    }
+
+  }
+}
+
+// airscript检测版本
+function checkVesion(){
+  try{
+    let temp = Application.Range("A1").Text;
+    Application.Range("A1").Value  = temp
+    console.log("😶‍🌫️ 检测到当前airscript版本为1.0，进行1.0适配")
+  }catch{
+    console.log("😶‍🌫️ 检测到当前airscript版本为2.0，进行2.0适配")
+    version = 2
+  }
+}
+// ======================生成表修改相关结束======================
+
+
+// ================================纯原生MD5开始===============================
+let MD5 = function(e) {
+    function h(a, b) {
+        var c, d, e, f, g;
+        e = a & 2147483648;
+        f = b & 2147483648;
+        c = a & 1073741824;
+        d = b & 1073741824;
+        g = (a & 1073741823) + (b & 1073741823);
+        return c & d ? g ^ 2147483648 ^ e ^ f : c | d ? g & 1073741824 ? g ^ 3221225472 ^ e ^ f : g ^ 1073741824 ^ e ^ f : g ^ e ^ f
+    }
+
+    function k(a, b, c, d, e, f, g) {
+        a = h(a, h(h(b & c | ~b & d, e), g));
+        return h(a << f | a >>> 32 - f, b)
+    }
+
+    function l(a, b, c, d, e, f, g) {
+        a = h(a, h(h(b & d | c & ~d, e), g));
+        return h(a << f | a >>> 32 - f, b)
+    }
+
+    function m(a, b, d, c, e, f, g) {
+        a = h(a, h(h(b ^ d ^ c, e), g));
+        return h(a << f | a >>> 32 - f, b)
+    }
+
+    function n(a, b, d, c, e, f, g) {
+        a = h(a, h(h(d ^ (b | ~c), e), g));
+        return h(a << f | a >>> 32 - f, b)
+    }
+
+    function p(a) {
+        var b = "",
+            d = "",
+            c;
+        for (c = 0; 3 >= c; c++) d = a >>> 8 * c & 255, d = "0" + d.toString(16), b += d.substr(d.length - 2, 2);
+        return b
+    }
+    var f = [],
+        q, r, s, t, a, b, c, d;
+    e = function(a) {
+        a = a.replace(/\r\n/g, "\n");
+        for (var b = "", d = 0; d < a.length; d++) {
+            var c = a.charCodeAt(d);
+            128 > c ? b += String.fromCharCode(c) : (127 < c && 2048 > c ? b += String.fromCharCode(c >> 6 | 192) : (b += String.fromCharCode(c >> 12 | 224), b += String.fromCharCode(c >> 6 & 63 | 128)), b += String.fromCharCode(c & 63 | 128))
+        }
+        return b
+    }(e);
+    f = function(b) {
+        var a, c = b.length;
+        a = c + 8;
+        for (var d = 16 * ((a - a % 64) / 64 + 1), e = Array(d - 1), f = 0, g = 0; g < c;) a = (g - g % 4) / 4, f = g % 4 * 8, e[a] |= b.charCodeAt(g) << f, g++;
+        a = (g - g % 4) / 4;
+        e[a] |= 128 << g % 4 * 8;
+        e[d - 2] = c << 3;
+        e[d - 1] = c >>> 29;
+        return e
+    }(e);
+    a = 1732584193;
+    b = 4023233417;
+    c = 2562383102;
+    d = 271733878;
+    for (e = 0; e < f.length; e += 16) q = a, r = b, s = c, t = d, a = k(a, b, c, d, f[e + 0], 7, 3614090360), d = k(d, a, b, c, f[e + 1], 12, 3905402710), c = k(c, d, a, b, f[e + 2], 17, 606105819), b = k(b, c, d, a, f[e + 3], 22, 3250441966), a = k(a, b, c, d, f[e + 4], 7, 4118548399), d = k(d, a, b, c, f[e + 5], 12, 1200080426), c = k(c, d, a, b, f[e + 6], 17, 2821735955), b = k(b, c, d, a, f[e + 7], 22, 4249261313), a = k(a, b, c, d, f[e + 8], 7, 1770035416), d = k(d, a, b, c, f[e + 9], 12, 2336552879), c = k(c, d, a, b, f[e + 10], 17, 4294925233), b = k(b, c, d, a, f[e + 11], 22, 2304563134), a = k(a, b, c, d, f[e + 12], 7, 1804603682), d = k(d, a, b, c, f[e + 13], 12, 4254626195), c = k(c, d, a, b, f[e + 14], 17, 2792965006), b = k(b, c, d, a, f[e + 15], 22, 1236535329), a = l(a, b, c, d, f[e + 1], 5, 4129170786), d = l(d, a, b, c, f[e + 6], 9, 3225465664), c = l(c, d, a, b, f[e + 11], 14, 643717713), b = l(b, c, d, a, f[e + 0], 20, 3921069994), a = l(a, b, c, d, f[e + 5], 5, 3593408605), d = l(d, a, b, c, f[e + 10], 9, 38016083), c = l(c, d, a, b, f[e + 15], 14, 3634488961), b = l(b, c, d, a, f[e + 4], 20, 3889429448), a = l(a, b, c, d, f[e + 9], 5, 568446438), d = l(d, a, b, c, f[e + 14], 9, 3275163606), c = l(c, d, a, b, f[e + 3], 14, 4107603335), b = l(b, c, d, a, f[e + 8], 20, 1163531501), a = l(a, b, c, d, f[e + 13], 5, 2850285829), d = l(d, a, b, c, f[e + 2], 9, 4243563512), c = l(c, d, a, b, f[e + 7], 14, 1735328473), b = l(b, c, d, a, f[e + 12], 20, 2368359562), a = m(a, b, c, d, f[e + 5], 4, 4294588738), d = m(d, a, b, c, f[e + 8], 11, 2272392833), c = m(c, d, a, b, f[e + 11], 16, 1839030562), b = m(b, c, d, a, f[e + 14], 23, 4259657740), a = m(a, b, c, d, f[e + 1], 4, 2763975236), d = m(d, a, b, c, f[e + 4], 11, 1272893353), c = m(c, d, a, b, f[e + 7], 16, 4139469664), b = m(b, c, d, a, f[e + 10], 23, 3200236656), a = m(a, b, c, d, f[e + 13], 4, 681279174), d = m(d, a, b, c, f[e + 0], 11, 3936430074), c = m(c, d, a, b, f[e + 3], 16, 3572445317), b = m(b, c, d, a, f[e + 6], 23, 76029189), a = m(a, b, c, d, f[e + 9], 4, 3654602809), d = m(d, a, b, c, f[e + 12], 11, 3873151461), c = m(c, d, a, b, f[e + 15], 16, 530742520), b = m(b, c, d, a, f[e + 2], 23, 3299628645), a = n(a, b, c, d, f[e + 0], 6, 4096336452), d = n(d, a, b, c, f[e + 7], 10, 1126891415), c = n(c, d, a, b, f[e + 14], 15, 2878612391), b = n(b, c, d, a, f[e + 5], 21, 4237533241), a = n(a, b, c, d, f[e + 12], 6, 1700485571), d = n(d, a, b, c, f[e + 3], 10, 2399980690), c = n(c, d, a, b, f[e + 10], 15, 4293915773), b = n(b, c, d, a, f[e + 1], 21, 2240044497), a = n(a, b, c, d, f[e + 8], 6, 1873313359), d = n(d, a, b, c, f[e + 15], 10, 4264355552), c = n(c, d, a, b, f[e + 6], 15, 2734768916), b = n(b, c, d, a, f[e + 13], 21, 1309151649), a = n(a, b, c, d, f[e + 4], 6, 4149444226), d = n(d, a, b, c, f[e + 11], 10, 3174756917), c = n(c, d, a, b, f[e + 2], 15, 718787259), b = n(b, c, d, a, f[e + 9], 21, 3951481745), a = h(a, q), b = h(b, r), c = h(c, s), d = h(d, t);
+    return (p(a) + p(b) + p(c) + p(d)).toLowerCase()
+};
+// ================================纯原生MD5结束===============================
+
+
+// ================================GITHUB处理函数开始================================
+// 找到指定用户和标题的issue，传入参数username是所有者，target是标题，并返回COMMENT_ID
+function getIssuesTarget(username, target) {
+    url = `https://api.github.com/repos/${OWNER}/${REPO}/issues`;
+    // console.log(url)
+    headers = {
+      "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    }
+    resp = HTTP.fetch(url, {
+        method: "get",
+        headers: headers,
+        // data: data
+    });
+    resp = resp.text()
+    // Application.Range(colNum[0] + 20).Value = resp
+    // console.log(resp)
+    resp = JSON.parse(resp)
+    // tasklist = []
+    for(let i =0; i < resp.length; i++){
+      title = resp[i]["title"]
+      user = resp[i]["user"]["login"]
+      // console.log("😶‍🌫️ 用户：", user, " 标题：",title)
+      if (title == target && user == username) {
+        console.log("🎯 找到目标" + target)
+        body = resp[i]["body"]
+        number = resp[i]["number"]
+        // Application.Range(colNum[0] + 22).Value = body
+        return number
+        // break
+      }
+    }
+    return -1
+}
+
+// 发布issue
+function postIssues(title, content) {
+  url = `https://api.github.com/repos/${OWNER}/${REPO}/issues`;
+  // console.log(url)
+  headers = {
+    'Authorization': `token ${TOKEN}`,
+    'Accept': 'application/vnd.github.v3+json',
+    "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  }
+  data = {
+    // "owner": OWNER,
+    // "repo": REPO,
+    "title": title,
+    "body": content,
+    // "labels": ['bug'],
+  };
+  // console.log(data)
+  resp = HTTP.post(
+    url,
+    data = data,
+    { headers: headers }
+  );
+  resp = resp.json()
+  // console.log(resp)
+  sleep(5000)
+}
+
+// 删除issue - 真实删，存在问题
+function deleteIssues(COMMENT_ID) {
+  url = `https://api.github.com/repos/${OWNER}/${REPO}/issues/${COMMENT_ID}`;
+  // console.log(url)
+  headers = {
+    'Authorization': `token ${TOKEN}`,
+    'Accept': 'application/vnd.github.v3+json',
+    "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  }
+  // resp = HTTP.fetch(url, {
+  //     method: "DELETE",
+  //     headers: headers,
+  //     // data: JSON.stringify(data)
+  // });
+  // resp = HTTP.fetch(url, {
+  //   method: 'DELETE',
+  //   // timeout: 2000,
+  //   headers: headers
+  // })
+  resp = HTTP.delete(url, {
+    headers: {
+      'Authorization': `token ${TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    }
+  })
+  console.log(resp.status) // 200
+  // console.log(resp.text())
+  // {"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+  resp = resp.json()
+  console.log(resp)
+}
+
+// 虚假删 - 只清空内容
+function deleteIssuesFake(COMMENT_ID) {
+  content = ""
+  updateIssues(COMMENT_ID, content)
+}
+
+// 回复评论
+function writeIssues(COMMENT_ID, content){
+  url = `https://api.github.com/repos/${OWNER}/${REPO}/issues/${COMMENT_ID}/comments`
+  
+  // 设置请求头
+  headers = {
+      'Authorization': `token ${TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  }
+
+  // 构建请求体
+  data = {
+    'body': content
+  }
+
+  // 发送POST请求
+  resp = HTTP.post(
+    url,
+    data = data,
+    { headers: headers }
+  );
+
+  resp = resp.json()
+
+  let replytime = resp["created_at"]
+  // console.log(replytime)
+  if(replytime != undefined){
+    console.log("🚀 回复成功")
+  }else{
+    console.log("🚨 回复失败")
+  }
+  sleep(5000)
+}
+
+// 修改issue内容，根据COMMENT_ID修改
+function updateIssues(COMMENT_ID, content){
+  // url = `https://api.github.com/repos/${OWNER}/${REPO}/issues/${COMMENT_ID}/comments`  // 新增评论
+  url = `https://api.github.com/repos/${OWNER}/${REPO}/issues/${COMMENT_ID}`; // 修改内容
+  
+  // 设置请求头
+  headers = {
+      'Authorization': `token ${TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  }
+
+  // 构建请求体
+  data = {
+    'body': content
+  }
+
+  // 发送POST请求
+  resp = HTTP.post(
+    url,
+    data = data,
+    { headers: headers }
+  );
+
+  resp = resp.json()
+  let replytime = resp["created_at"]
+  // console.log(replytime)
+  if(replytime != undefined){
+    console.log("🚀 更新成功")
+  }else{
+    console.log("🚨 更新失败")
+  }
+  sleep(5000)
+}
+// ================================GITHUB处理函数结束================================
+
+// ================================业务逻辑开始================================
+
+// ================================业务逻辑共用函数开始================================
+// 时间戳生成，YYYY-MM-DD HH:mm:ss格式
+function timestampCreate() {
+  return new Date().toISOString().split('T')[0] + ' ' + new Date().toISOString().split('T')[1].split('.')[0] // YYYY-MM-DD HH:mm:ss格式
+}
+
+// 格式化时间。2024-11-17 13:55:53 ->转化为：2024/7/23 10:01
+function formatDate(dateStr) {
+    // 假设dateStr是有效的日期字符串，格式为"YYYY-MM-DD HH:mm:ss"
+    // 使用split方法将日期字符串拆分为年、月、日、时、分、秒
+    const [datePart, timePart] = dateStr.split(' ');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = timePart.split(':');
+
+    const formattedMonth = month.replace(/^0/, ''); // 删除月份的前导零（如果有）
+    const formattedDay = day.replace(/^0/, ''); // 删除日期的前导零（如果有）
+
+    // 使用数组元素构建新的日期字符串，时间只取到时
+    const formattedDate = `${year}/${formattedMonth}/${formattedDay} ${hour}:${minute}`;
+
+    return formattedDate;
 }
 
 
-async function fetchData() {
-    // 定义正则表达式，用于匹配 [博客_xxx] 格式的标题
-    const regex = new RegExp(`^\\[${TYPE}_.*\\].*`);
-    if (USE_MOCK_DATA) {
-        // return mockIssues;
-        // // 过滤模拟数据，只保留标题以 ARTICLE 开头的项
-        // return mockIssues.filter(issue => issue.title.startsWith(ARTICLE));
-        // 过滤模拟数据，只保留标题符合正则表达式的项
-        return mockIssues.filter(issue => regex.test(issue.title));
+// ================================业务逻辑共用函数结束================================
+
+// ================================读取金山文档表格，对表格数据处理后，同步到中间层开始================================
+// 检查是否具备操控github权限
+function checkGithub() {
+  ActivateSheet(sheetNameConfig)
+  TOKEN = Application.Range("A2").Text  // 记录token
+  if(TOKEN == "" || TOKEN == "undefined") {
+    return false
+  }
+  return true
+}
+
+// 检查个人信息一致性校验值
+function checkConsistency(sign){
+  // console.log("🔒 生成一致性校验值")
+  let md5 = ""
+  // 计算md5
+  md5 = MD5(sign)
+  // console.log(md5)
+  return md5
+}
+
+function formatToStr(str) {
+  if (str == "undefined" || str == undefined ) {
+    str = ""
+  }
+  return str
+}
+
+// 个人信息MD5|文章封面MD5
+// 读取个人信息
+function readPersonalInfo() {
+  ActivateSheet(sheetNameConfig)
+  pos = 2 // 第2行
+  name = Application.Range("B" + pos).Text
+  avatar = Application.Range("C" + pos).Text
+  bio = Application.Range("D" + pos).Text
+  consistency = Application.Range("E" + pos).Text  // 一致性校验
+  consistencyArray = consistency.split('|');
+  consistency = consistencyArray[0] // 第1个
+  // console.log(consistency)
+
+  MiddleLayerConfigMessage["name"] = name
+  MiddleLayerConfigMessage["avatar"] = avatar
+  MiddleLayerConfigMessage["bio"] = bio
+
+  // 一致性校验检查
+  let sign = String(name) + "|"  + String(avatar) + "|"  + String(bio)
+  // 判断是否有被修改过
+  // 一致性校验
+  consistencyChallenge = checkConsistency(sign) // 新的一致性校验值
+  if(consistencyChallenge == consistency){
+    // console.log("✅ 个人信息一致性校验通过")
+    console.log("⚡️ 已是最新个人信息，无需更新")
+  }else{
+    console.log("♻️ 获取最新个人信息")
+    // 写入最新一致性校验
+    consistency = consistencyChallenge + "|" + formatToStr(consistencyArray[1])
+    // console.log(consistency)
+    if(version == 1){
+      // airscipt 1.0
+      Application.Range("E" + pos).Value = consistency
+    }else{
+      // airscript 2.0(Beta)
+      Application.Range("E" + pos).Value2 = consistency
+    }
+
+    // 需要写入最新配置到中间层
+    MiddleLayerConfigConsistency = true;
+  }
+}
+
+// 读取文章图片
+function readArticleImage() {
+  ActivateSheet(sheetNameConfig)
+  let pos = 2
+  consistency = Application.Range("E" + pos).Text  // 一致性校验
+  consistencyArray = consistency.split('|');
+  consistency = consistencyArray[1]   // 第2个
+  // console.log(consistency)
+  // 一致性校验 - 文章封面检查
+  let sign = ""
+  // 读取金山文档文章中每一行，写入配置中
+  ActivateSheet(sheetNameArticle)
+  let rowcol = getRowCol() 
+  let workUsedRowEnd = rowcol[0]  // 行，已存在数据的最后一行
+  // console.log(workUsedRowEnd)
+  for(let row = 2; row <= workUsedRowEnd; row++) {
+    title = Application.Range("A" + row).Text
+    coverImage = formatToStr(Application.Range("C" + row).Text)
+    // console.log(title, coverImage)
+    MiddleLayerConfigMessage["articleImages"][ARTICLE + title] = coverImage
+    sign += String(title) + "|" + String(coverImage) + "|"
+  }
+  
+  // 判断是否有被修改过
+  consistencyChallenge = checkConsistency(sign)
+  if(consistencyChallenge == consistency){
+    // console.log("✅ 文章封面一致性校验通过")
+    console.log("⚡️ 已是最新文章封面，无需更新")
+  }else{
+    console.log("♻️ 获取最新文章封面")
+
+    // 写入最新一致性校验
+    consistency = formatToStr(consistencyArray[0]) + "|" + consistencyChallenge
+    // console.log(consistency)
+    ActivateSheet(sheetNameConfig)
+    if(version == 1){
+      // airscipt 1.0
+      Application.Range("E" + pos).Value = consistency
+    }else{
+      // airscript 2.0(Beta)
+      Application.Range("E" + pos).Value2 = consistency
+    }
+
+    // 需要写入最新配置到中间层
+    MiddleLayerConfigConsistency = true;
+  }
+}
+
+// 配置更新
+function middleUpdateConfig() {
+  // 个人信息处理
+  readPersonalInfo()
+  sleep(5000)
+  // 文章封面处理
+  readArticleImage()
+  // console.log(MiddleLayerConfigMessage)
+  if (MiddleLayerConfigConsistency) {
+    // console.log("✨️ 开始更新中间层配置")
+    // 需要更新配置
+    target = CONFIG
+    COMMENT_ID = getIssuesTarget(OWNER, target)
+    if (COMMENT_ID != -1) {
+      // 已存在，则更新
+      console.log("✨ 更新中间层配置")
+      // console.log(COMMENT_ID)
+      content = JSON.stringify(MiddleLayerConfigMessage); // json转字符串
+      updateIssues(COMMENT_ID, content)
     } else {
-        try {
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error('网络响应失败');
-            }
-            // return await response.json();
-            const data = await response.json();
-            // // 过滤真实数据，只保留标题以 ARTICLE 开头的项
-            // return data.filter(issue => issue.title.startsWith(ARTICLE));
-            // 过滤真实数据，只保留标题符合正则表达式的项
-            return data.filter(issue => regex.test(issue.title));
-        } catch (error) {
-            console.error('获取 GitHub Issues 时出错:', error);
-            return [];
-        }
+      console.log("🎉 添加中间层配置")
+      // 不存在，则发布
+      title = CONFIG
+      content = JSON.stringify(MiddleLayerConfigMessage);
+      postIssues(title, content)
     }
+  }
 }
 
-function renderPersonalInfo(issues) {
-    // 检查容器元素是否存在
-    if (!avatarContainer || !personalInfoContainer) {
-        console.error('头像容器或个人信息容器未找到，请检查 HTML 中的元素 ID。');
-        return;
-    }
-    // console.log(issues)
-    // console.log(CONFIG)
-    const configIssue = issues.find(issue => issue.title === CONFIG);
-    if (configIssue) {
-        try {
-            const config = JSON.parse(configIssue.body);
-            // 检查配置对象中是否包含所需属性
-            if (config.avatar && config.name && config.bio) {
-                const avatarImg = document.createElement('img');
-                avatarImg.src = config.avatar;
-                avatarImg.alt = '头像';
-                avatarImg.className = 'avatar';
-                avatarContainer.appendChild(avatarImg);
+// 文章发布
+function middleUpdateArticle(){
+  // 读取金山文档文章中每一行，写入配置中
+  ActivateSheet(sheetNameArticle)
+  let rowcol = getRowCol() 
+  let workUsedRowEnd = rowcol[0]  // 行，已存在数据的最后一行
+  // console.log(workUsedRowEnd)
+  for(let row = 2; row <= workUsedRowEnd; row++) {
+    title = Application.Range("A" + row).Text
+    content = Application.Range("B" + row).Text
+    coverImage = Application.Range("C" + row).Text
+    publishStatus = Application.Range("E" + row).Text // 发布状态
+    category = Application.Range("F" + row).Text
+    tags = Application.Range("G" + row).Text
+    // console.log(title)
+    consistency = Application.Range("D" + row).Text  // 一致性校验
+    // console.log(consistency)
+    // 一致性校验 - 文章检查
+    let sign = String(title) + "|" + String(content) + "|" + String(publishStatus) + "|" + String(category) + "|" + String(tags)
+    // 判断是否有被修改过
+    consistencyChallenge = checkConsistency(sign)
+    if(consistencyChallenge == consistency){
+      // console.log("✅ 文章一致性校验通过 - ", title)
+      console.log("⚡️ 已是最新文章，无需更新，标题：", title)
+      // 无需更新文章
+    }else{
+      // console.log("♻️ 更新最新文章：", title);
+      // 写入最新一致性校验
+      consistency = consistencyChallenge
+      if(version == 1){
+        // airscipt 1.0
+        Application.Range("D" + row).Value = consistency
+      }else{
+        // airscript 2.0(Beta)
+        Application.Range("D" + row).Value2 = consistency
+      }
 
-                const nameElement = document.createElement('h2');
-                nameElement.textContent = config.name;
-                const bioElement = document.createElement('p');
-                bioElement.textContent = config.bio;
-
-                personalInfoContainer.appendChild(nameElement);
-                personalInfoContainer.appendChild(bioElement);
-            } else {
-                console.error('配置信息缺少必要字段，请检查 [配置] Issue 的内容。');
-            }
-            // 提取 articleImages 并赋值给 window.articleImages
-            if (config.articleImages) {
-                window.articleImages = config.articleImages;
-            }
-        } catch (error) {
-            console.error('解析个人信息配置出错:', error);
-        }
-    }
-}
-
-async function init() {
-    const issues = await fetchData();
-    renderPersonalInfo(issues);
-    const articleIssues = issues.filter(issue => issue.title !== CONFIG);
-    renderSummaries(articleIssues);
-
-    // searchInput.addEventListener('input', function () {
-    //     const keyword = this.value.toLowerCase();
-    //     const filteredIssues = articleIssues.filter(issue =>
-    //         issue.title.toLowerCase().includes(keyword) || issue.body.toLowerCase().includes(keyword)
-    //     );
-    //     renderSummaries(filteredIssues);
-    // });
-}
-
-function renderSummaries_noimage(issues) {
-    summariesContainer.innerHTML = '';
-    issues.forEach(issue => {
-        // 创建文章概要元素
-        const summaryElement = document.createElement('div');
-        summaryElement.classList.add('blog-summary');
-
-        // 创建文章标题元素
-        const titleElement = document.createElement('h2');
-        // 去掉 ARTICLE 标识
-        const cleanTitle = issue.title.replace(ARTICLE, '').trim();
-        titleElement.textContent = cleanTitle;
-        titleElement.addEventListener('click', () => showDetail(issue));
-
-        // 创建文章概要内容元素
-        const summaryContent = document.createElement('p');
-        // 截取前 指定 个字符作为概要
-        const summaryText = issue.body.substring(0, ARTICLE_ABSTRACT_NUM) + '...';
-        summaryContent.innerHTML = marked.parse(summaryText);
-
-        // 将标题和概要添加到文章概要容器
-        summaryElement.appendChild(titleElement);
-        summaryElement.appendChild(summaryContent);
-
-        // 将文章概要容器添加到博客文章概要容器
-        summariesContainer.appendChild(summaryElement);
-    });
-}
-
-/**
- * 渲染文章概要列表
- * @param {Array} issues - 文章列表数据
- * 文章内容为空也不进行显示
- */
-function renderSummaries(issues) {
-    summariesContainer.innerHTML = '';
-    issues.forEach((issue, index) => {
-        // 创建文章概要元素
-        const summaryElement = document.createElement('div');
-        summaryElement.classList.add('blog-summary');
-        // 使用 Flexbox 布局
-        summaryElement.style.display = 'flex'; 
-        summaryElement.style.alignItems = 'center'; 
-        summaryElement.style.justifyContent = 'space-between'; 
-        summaryElement.style.gap = '20px'; // 设置图片和文本之间的间距
-
-        // 创建文章标题和内容容器
-        const textContainer = document.createElement('div');
-        textContainer.classList.add('text-container');
-        // 让文本容器可以弹性增长
-        textContainer.style.flex = 1; 
-
-        // 创建文章图片元素
-        let imgSrc = '';
-        if (window.articleImages && window.articleImages[issue.title]) {
-            imgSrc = window.articleImages[issue.title];
+      title = ARTICLE + title
+      // 查询是否有文章
+      // 无对应文章，且发布状态为“发布”或空，则发文章
+      if (publishStatus == "发布" ||  publishStatus == "" || publishStatus == "undefined" || publishStatus == undefined) {
+        console.log("🎉 发布文章：", title)
+        // 查询是否有已存在的issue标题，有则直接修改文章内容，没有则创建
+        COMMENT_ID = getIssuesTarget(OWNER, title)
+        if (COMMENT_ID != -1) {
+          // 存在issue，修改文章内容
+          updateIssues(COMMENT_ID, content)
         } else {
-            // 生成 1 到 200 之间的随机数
-            const randomNum = Math.floor(Math.random() * 200) + 1;
-            imgSrc = `https://img.loliapi.cn/i/pp/img${randomNum}.webp`;
+          // 不存在issue，直接发布新issue
+          postIssues(title, content)
         }
+        
+      } else if (publishStatus == "不发布") {
+        console.log("🔥 删除文章：", title)
+        // 发布状态为“不发布”，则删除文章
+        COMMENT_ID = getIssuesTarget(OWNER, title)
+        // console.log(COMMENT_ID)
+        deleteIssuesFake(COMMENT_ID)
+        
+      }
+    }
+  }
+}
+function strTojson(note_content) {
+    try {
+        let jsonData = [];
+        if (note_content) {
+            // 改进点：仅过滤危险字符（保留emoji）
+            const sanitized = note_content
+                // .replace(/</g, '＜')  // 替换尖括号为全角符号
+                // .replace(/>/g, '＞')
+                // .replace(/\\/g, '＼') // 替换反斜杠为全角
 
-        const imgElement = document.createElement('img');
-        imgElement.src = imgSrc;
-        imgElement.alt = issue.title;
-        // 限制图片最大宽度和高度
-        imgElement.style.maxWidth = '30%'; 
-        imgElement.style.maxHeight = '200px'; 
-        imgElement.style.objectFit = 'cover'; 
-
-        // 根据索引判断图片显示位置
-        if (index % 2 === 0) {
-            imgElement.classList.add('left-image');
-            summaryElement.prepend(imgElement); // 将图片添加到容器开头
-        } else {
-            imgElement.classList.add('right-image');
-            summaryElement.appendChild(imgElement);
+            // 添加容错处理
+            jsonData = JSON.parse(sanitized);
+            
+            // 类型校验
+            if (!Array.isArray(jsonData)) {
+                console.warn('数据格式异常，重置为数组');
+                return [];
+            }
         }
-
-        // 创建文章标题元素
-        const titleElement = document.createElement('h2');
-        // 去掉 ARTICLE 标识
-        const cleanTitle = issue.title.replace(ARTICLE, '').trim();
-        titleElement.textContent = cleanTitle;
-        titleElement.addEventListener('click', () => showDetail(issue));
-
-        // 创建文章概要内容元素
-        const summaryContent = document.createElement('p');
-        // 截取前 指定 个字符作为概要
-        const summaryText = issue.body.substring(0, ARTICLE_ABSTRACT_NUM) + '...';
-        summaryContent.innerHTML = marked.parse(summaryText);
-
-        // 将标题和概要添加到文本容器
-        textContainer.appendChild(titleElement);
-        textContainer.appendChild(summaryContent);
-
-        // 将文本容器添加到文章概要容器
-        summaryElement.appendChild(textContainer);
-
-        // 将文章概要容器添加到博客文章概要容器
-        summariesContainer.appendChild(summaryElement);
-    });
+        return jsonData;
+    } catch (error) {
+        console.error('JSON解析失败，返回空数组:', error);
+        return [];
+    }
 }
 
-// 显示文章详情
-function showDetail(issue) {
-    // 隐藏文章概要
-    summariesContainer.style.display = 'none';
-    // 隐藏个人信息
-    personalInfoContainer.style.display = 'none';
-    // 显示文章详情
-    detailContainer.style.display = 'block';
+// 读取“仅写文件”数据，将数据写入金山文档，清空“仅写文件”
+function data_write_handle() {
+  // 获取“仅写文件”密码
+  key = getPassword("data_write", getKeyConfig())
+  console.log("🔓️ 旧仅写密钥明文：", key)
+  // console.log(key)
+  // 读取“仅写文件”数据、清空文件数据
+  message = []
+  key_new = getPassword("data_write", globalKeyConfigNew)  // 新密码
 
-    // 清空之前的详情内容
-    detailContainer.innerHTML = '';
+  result = writeNecutData(NETCUT_DATA_WRITE, key.password, message, key_new.password)
+  note_content = result[2]
+  // console.log(note_content)
+    
+  // 将数据写入金山文档
+  // json -> 表格每一行
+  // 找到空行开始追行写入
+  ActivateSheet(sheetNameArticle)
+  let rowcol = getRowCol() 
+  let workUsedRowEnd = rowcol[0]  // 行，已存在数据的最后一行
+  note_content = strTojson(note_content)
+  // console.log(workUsedRowEnd)
+  // console.log(note_content.length)
+  let count = 0
+  for(let i = 0; i < note_content.length; i++) {
+    row = workUsedRowEnd + 1 + count  // 从不存在数据的地方开始写入数据
+    timestamp = note_content[i]["timestamp"]
+    message = note_content[i]["message"]
+    if (message == "") {
+      // console.log("为空跳过")
+      continue
+    }
+    count++;  // 往下一行走
+    if(version == 1){
+      // airscipt 1.0
+      Application.Range(colNum[0] + row).Value = timestamp // 时间
+      Application.Range(colNum[1] + row).Value = message // 漂流瓶内容
+    }else{
+      // airscript 2.0(Beta)
+      Application.Range(colNum[0] + row).Value2 = timestamp // 时间
+      Application.Range(colNum[1] + row).Value2 = message // 漂流瓶内容
+    }
+  }
 
-    // 创建文章标题元素
-    const titleElement = document.createElement('h1');
-    // 去掉 ARTICLE 标识
-    const cleanTitle = issue.title.replace(ARTICLE, '').trim();
-    titleElement.textContent = cleanTitle;
+}
+// ================================读取金山文档表格，对表格数据处理后，同步到中间层结束================================
 
-    // 创建文章内容元素
-    const contentElement = document.createElement('div');
-    contentElement.innerHTML = marked.parse(issue.body);
+// ================================业务逻辑结束================================
 
-    // 创建返回按钮
-    const backButton = document.createElement('button');
-    backButton.textContent = '返回';
-    backButton.addEventListener('click', () => {
-        summariesContainer.style.display = 'block';
-        detailContainer.style.display = 'none';
-        // 如果是从个人信息页面返回，显示个人信息
-        personalInfoContainer.style.display = 'block';
-    });
 
-    // 将元素添加到详情容器
-    detailContainer.appendChild(backButton);
-    detailContainer.appendChild(titleElement);
-    detailContainer.appendChild(contentElement);
+// ================================初始化开始================================
+
+// 表格初始化
+function initTable(){
+  checkVesion() // 版本检测，以进行不同版本的适配
+
+  storeWorkbook()
+  createSheet(sheetNameArticle)
+  ActivateSheet(sheetNameArticle)
+  editConfigSheet(contentArticle)
+
+  createSheet(sheetNameConfig)
+  ActivateSheet(sheetNameConfig)
+  editConfigSheet(contentConfig)
 }
 
-init();
+// 后端初始化
+function init() {
+  // 权限检查
+  if (!checkGithub()) { 
+    console.log("✨ 请填写“配置”表中的GITHUB TOKEN等信息")
+    console.log("✨ 然后填写“文章”中的内容")
+    console.log("✨ 最后再次运行此脚本即可发布文章")
+  } else {
+    // 配置更新
+    middleUpdateConfig()
+    // 文章更新
+    middleUpdateArticle()
+  }
+
+
+}
+
+function main() {
+  initTable();
+  init()
+}
+
+main()
+
+// ================================初始化结束================================

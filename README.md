@@ -37,24 +37,23 @@ QQ群：**963592267**
     - 💿 低代码部署，部署简单
     - ♾️ 零成本方案
     - 💽 文章发布简单，采用增量更新，效率较高
-    - 🔥 兼容airscript 1.0和airscript 2.0(Beta)
+    - 🔥 支持airscript 1.0
 
 ## 📺️ 视频教程
-[![](https://img.shields.io/badge/金山推送器-无盐七-blue)](https://www.bilibili.com/video/BV1hb5sz6EaT) https://www.bilibili.com/video/BV1hb5sz6EaT
+[![](https://img.shields.io/badge/金山推送器-无盐七-blue)](https://www.bilibili.com/video/BV1kf59zkE9C) 
+https://www.bilibili.com/video/BV1kf59zkE9C
   
 ## 🛰️ 文字部署步骤
 1. 显示层：fork或直接复制项目代码到你的仓库，仓库名为xxx.github.io。（这里的xxx为你github的昵称。自动会启用github page。）  
 2. 修改代码开头提示的配置：仅改动script.js和services.js开头（需要修改的部分）部分即可  
-3. 数据层：将services.js脚本复制到金山文档Airscript脚本编辑器中，添加网络API，首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后运行services.js脚本即可更新成功。  
+3. 数据层：将services.js脚本复制到金山文档Airscript脚本编辑器中（需要airscript 1.0环境），添加网络API，首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后运行services.js脚本即可更新成功。  
 4. 此时就可以访问到你的WEB项目啦。 访问：https://xxx.github.io  
 
 ## ⭐ 架构说明
 三级设计方案：**显示层 - 中间层 - 数据层**  
-显示层 - 采用Github Pages进行部署  
+前端 - 采用Github Pages进行部署（index.html、script.js、style.css）   
 中间层 - 采用Github Issues进行缓存  
-数据层 - 采用金山云文档进行存储和处理  
-前端 - 即显示层（index.html、script.js、style.css）  
-后端 - 即中间层与数据层（services.js）   
+后端 - 采用金山云文档进行存储和处理（services.js）  
 
 ## 🌈 业务流程
 **前端处理流程**  
