@@ -361,6 +361,7 @@ function postIssues(title, content) {
   );
   resp = resp.json()
   // console.log(resp)
+  sleep(5000)
 }
 
 // 删除issue - 真实删，存在问题
@@ -434,6 +435,7 @@ function writeIssues(COMMENT_ID, content){
   }else{
     console.log("🚨 回复失败")
   }
+  sleep(5000)
 }
 
 // 修改issue内容，根据COMMENT_ID修改
@@ -468,7 +470,7 @@ function updateIssues(COMMENT_ID, content){
   }else{
     console.log("🚨 更新失败")
   }
-  
+  sleep(5000)
 }
 // ================================GITHUB处理函数结束================================
 
@@ -828,4 +830,3 @@ function main() {
 main()
 
 // ================================初始化结束================================
-
