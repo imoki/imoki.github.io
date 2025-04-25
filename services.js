@@ -7,7 +7,7 @@
     
     脚本名称：services.js
     脚本兼容: airscript 1.0
-    更新时间：20250422
+    更新时间：20250425
     脚本：金山文档博客系统后端处理程序。解决金山文档跨域问题，文章发布功能。
     说明：将services.js脚本复制到金山文档Airscript脚本编辑器中，添加网络API。
           首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后，再运行services.js脚本即可更新成功。 
@@ -16,9 +16,10 @@
 
 // （需要修改的部分）
 const OWNER = 'imoki';           // github 用户名，仓库所有者
-const REPO = 'imoki.github.io';     // github page 仓库名
 
+// （以下不需要修改）
 // ================================全局变量开始================================
+const REPO = OWNER + '.github.io';     // github page 仓库名
 const TYPE = "博客" // 系统类型，用于区分不同系统
 const CONFIG = "[" + TYPE + "_配置]" // 配置标识
 const ARTICLE = "[" + TYPE + "_文章]" // 文章标识
@@ -321,6 +322,10 @@ function getIssuesTarget(username, target) {
     // console.log(resp)
     resp = JSON.parse(resp)
     // tasklist = []
+    let title = ""
+    let user = ""
+    let body = ""
+    let number = -1
     for(let i =0; i < resp.length; i++){
       title = resp[i]["title"]
       user = resp[i]["user"]["login"]
@@ -687,19 +692,22 @@ function middleUpdateArticle(){
         Application.Range("D" + row).Value2 = consistency
       }
 
-      title = ARTICLE + title
+      title_article = ARTICLE + title
       // 查询是否有文章
       // 无对应文章，且发布状态为“发布”或空，则发文章
       if (publishStatus == "发布" ||  publishStatus == "" || publishStatus == "undefined" || publishStatus == undefined) {
-        console.log("🎉 发布文章：", title)
+        // console.log("🎉 发布文章：", title_article)
         // 查询是否有已存在的issue标题，有则直接修改文章内容，没有则创建
-        COMMENT_ID = getIssuesTarget(OWNER, title)
+        COMMENT_ID = getIssuesTarget(OWNER, title_article)
+        // console.log(COMMENT_ID)
         if (COMMENT_ID != -1) {
+          console.log("🎉 更新文章：", title_article)
           // 存在issue，修改文章内容
           updateIssues(COMMENT_ID, content)
         } else {
+          console.log("🎉 发布文章：", title_article)
           // 不存在issue，直接发布新issue
-          postIssues(title, content)
+          postIssues(title_article, content)
         }
         
       } else if (publishStatus == "不发布") {

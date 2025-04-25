@@ -1,8 +1,8 @@
 // （需要修改的部分）
 const OWNER = 'imoki';           // github 用户名，仓库所有者
-const REPO = 'imoki.github.io';     // github page 仓库名
 
 // （以下不需要修改）
+const REPO = OWNER + '.github.io';     // github page 仓库名
 const TYPE = "博客" // 系统类型，用于区分不同系统
 const CONFIG = "[" + TYPE + "_配置]" // 配置标识
 const ARTICLE = "[" + TYPE + "_文章]" // 文章标识
@@ -36,8 +36,98 @@ const mockIssues = [
         title: "[博客_配置]",
         user: { login: 'imoki' }, // 假设用户名为 imoki
         // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者"}'
-        body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" }}'
-    }
+        // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" }}'
+        body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" },"sortOrder": ["[博客_文章]关于我", "[博客_文章]人工智能在医疗领域的应用与挑战", "[博客_文章]Web 开发技术的前世今生", "[博客_文章]十大火爆的 CMS 系统推荐" ]}'
+    },
+    {
+        id: 5,
+        title: '[博客_文章]关于我',
+        user: { login: 'imoki' },
+        body: `
+## 交流渠道
+- [哔哩哔哩](https://space.bilibili.com/3546828310055281) 无盐七空间。
+- [GitHub](https://github.com/imoki) imoki。
+- 公众号：默库
+- QQ群：963592267
+        `
+    },
+    {
+        id: 6,
+        title: '[博客_文章]Markdown 列表与链接示例',
+        user: { login: 'imoki' },
+        body: `
+# Markdown 列表与链接示例
+
+## 无序列表
+- 项目 1
+- 项目 2
+- 项目 3
+
+## 有序列表
+1. 第一点
+2. 第二点
+3. 第三点
+
+## 链接示例
+[百度](https://www.baidu.com) 是中国最大的搜索引擎。
+[GitHub](https://github.com) 是全球知名的代码托管平台。
+        `
+    },
+    {
+        id: 7,
+        title: '[博客_文章]Markdown 代码块与引用示例',
+        user: { login: 'imoki' },
+        body: `
+# Markdown 代码块与引用示例
+
+## 代码块示例
+### 单行代码
+这是一个单行代码示例：\`console.log('Hello, World!');\`
+
+### 多行代码
+\`\`\`javascript
+function greet(name) {
+    return 'Hello, ' + name + '!';
+}
+\`\`\`
+
+## 引用示例
+> 知识就是力量。
+> —— 弗朗西斯·培根
+        `
+    },
+    {
+        id: 8,
+        title: '[博客_文章]Markdown 表格示例',
+        user: { login: 'imoki' },
+        body: `
+# Markdown 表格示例
+
+| 姓名 | 年龄 | 职业 |
+| ---- | ---- | ---- |
+| 张三 | 25   | 工程师 |
+| 李四 | 30   | 设计师 |
+| 王五 | 22   | 学生 |
+        `
+    },
+    {
+        id: 9,
+        title: '[博客_文章]单行内的 Markdown 样式示例',
+        user: { login: 'imoki' },
+        body: '这里有 *斜体*、**粗体**、***粗斜体***、`行内代码`，还有 [百度链接](https://www.baidu.com)。'
+    },
+    {
+        id: 10,
+        title: '[博客_文章]单行内的 Markdown 特殊字符示例',
+        user: { login: 'imoki' },
+        body: '数学公式示例：E=mc^2^。这是一个带符号的句子：2^10^ 表示 2 的 10 次方，5~2~ 可用于特殊标注，还有 &copy; 版权符号。'
+    },
+    {
+        id: 11,
+        title: '[博客_文章]单行内的 Markdown 表情示例',
+        user: { login: 'imoki' },
+        body: '今天心情很不错 :smile:，希望每天都能像这样 :sunny:。'
+    },
 ].filter(issue => issue.user && issue.user.login === OWNER);
 
 // 获取容器元素
@@ -148,10 +238,50 @@ function renderPersonalInfo(issues) {
 }
 
 async function init() {
+    // if (typeof marked === 'undefined') {
+    //     console.error('marked 库未正确加载，请检查 HTML 文件中的引入语句。');
+    //     return;
+    // }
     const issues = await fetchData();
     renderPersonalInfo(issues);
     const articleIssues = issues.filter(issue => issue.title !== CONFIG);
-    renderSummaries(articleIssues);
+
+    // 获取 [博客_配置] 中的排序规则
+    const configIssue = issues.find(issue => issue.title === CONFIG);
+    // console.log(configIssue)
+    let sortOrder = [];
+    if (configIssue) {
+        try {
+            const config = JSON.parse(configIssue.body);
+            // console.log(config)
+            if (config.sortOrder && Array.isArray(config.sortOrder)) {
+                sortOrder = config.sortOrder;
+            }
+        } catch (error) {
+            console.error('解析排序配置出错:', error);
+        }
+    }
+
+    // // 输出 sortOrder 和 articleIssues 用于调试
+    // console.log('sortOrder:', sortOrder);
+    // console.log('articleIssues:', articleIssues);
+    // 根据排序规则对文章进行排序
+    const sortedArticleIssues = articleIssues.sort((a, b) => {
+        const indexA = sortOrder.indexOf(a.title);
+        const indexB = sortOrder.indexOf(b.title);
+
+        if (indexA === -1 && indexB === -1) {
+            return 0;
+        } else if (indexA === -1) {
+            return 1;
+        } else if (indexB === -1) {
+            return -1;
+        } else {
+            return indexA - indexB;
+        }
+    });
+    // console.log(sortedArticleIssues)
+    renderSummaries(sortedArticleIssues);
 
     // searchInput.addEventListener('input', function () {
     //     const keyword = this.value.toLowerCase();
