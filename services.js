@@ -7,7 +7,7 @@
     
     脚本名称：services.js
     脚本兼容: airscript 1.0
-    更新时间：20250425
+    更新时间：20250825
     脚本：金山文档博客系统后端处理程序。解决金山文档跨域问题，文章发布功能。
     说明：将services.js脚本复制到金山文档Airscript脚本编辑器中，添加网络API。
           首次运行会自动生成表格，填写此表格，再运行即可发布文章。之后要更新文章，直接修改表格后，再运行services.js脚本即可更新成功。 
@@ -31,7 +31,7 @@ var MiddleLayerConfigMessage = {"name": "imoki", "avatar": "", "bio": "", "artic
 // 配置
 var sheetNameConfig = "配置"  // 配置表
 // var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.kkgithub.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
-var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.github.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
+var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.githubusercontent.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
 
 // 文章
 var sheetNameArticle = "文章"; // 存储表名称

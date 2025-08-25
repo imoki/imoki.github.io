@@ -468,7 +468,8 @@ function showDetail(issue) {
     detailContainer.appendChild(contentElement);
 
     // 查找评论数据
-    const commentsIssue = mockIssues.find(issue => issue.title === COMMENT);
+    let commentsIssue = mockIssues.find(issue => issue.title === COMMENT);
+    commentsIssue = false;  // 关闭评论
     if (commentsIssue) {
         try {
             const commentsData = JSON.parse(commentsIssue.body);
