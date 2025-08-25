@@ -13,8 +13,8 @@ const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/issues`; // 接口
 
 
 // 开关变量，设置为 true 使用模拟数据，设置为 false 使用真实的 GitHub API 数据
-// const USE_MOCK_DATA = false;
-const USE_MOCK_DATA = true; // 测试时使用模拟数据，发布时使用真实数据
+const USE_MOCK_DATA = false;
+// const USE_MOCK_DATA = true; // 测试时使用模拟数据，发布时使用真实数据
 // 模拟数据
 const mockIssues = [
     {
