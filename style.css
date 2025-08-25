@@ -194,3 +194,65 @@ body {
 .right-image {
     order: 1; /* 让图片显示在右侧 */
 }
+
+/* 评论区整体样式 */
+.distinct-comments-section {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-top: 3px solid #007BFF;
+  border-radius: 4px;
+}
+
+/* 评论标题样式 */
+.distinct-comments-section h2 {
+  color: #007BFF;
+  margin-bottom: 15px;
+  font-size: 1.5em; /* 增大字体大小 */
+  text-transform: uppercase; /* 标题字母大写 */
+  letter-spacing: 2px; /* 增加字母间距 */
+  border-bottom: 2px solid #007BFF; /* 添加下划线 */
+  padding-bottom: 10px; /* 下划线与文字的间距 */
+}
+
+/* 单条评论样式 */
+.comment {
+  background-color: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 在评论区和文章之间添加更大的间距 */
+#blog-detail .distinct-comments-section {
+  margin-top: 60px; /* 增大与文章的间距 */
+}
+
+/* 评论表单样式 */
+.comments-section form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comments-section input,
+.comments-section textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.comments-section button {
+  padding: 10px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.comments-section button:hover {
+  background-color: #0056b3;
+}

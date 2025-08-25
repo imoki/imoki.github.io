@@ -6,11 +6,15 @@ const REPO = OWNER + '.github.io';     // github page 仓库名
 const TYPE = "博客" // 系统类型，用于区分不同系统
 const CONFIG = "[" + TYPE + "_配置]" // 配置标识
 const ARTICLE = "[" + TYPE + "_文章]" // 文章标识
+const COMMENT = "[" + TYPE + "_评论]" // 评论标识
 const ARTICLE_ABSTRACT_NUM = 20;    // 文章摘要字数，设置为 0 不显示摘要
-const apiUrl = `https://api.kkgithub.com/repos/${OWNER}/${REPO}/issues`; // 接口地址
+// const apiUrl = `https://api.kkgithub.com/repos/${OWNER}/${REPO}/issues`; // 接口地址
+const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/issues`; // 接口地址
+
 
 // 开关变量，设置为 true 使用模拟数据，设置为 false 使用真实的 GitHub API 数据
-const USE_MOCK_DATA = false;
+// const USE_MOCK_DATA = false;
+const USE_MOCK_DATA = true; // 测试时使用模拟数据，发布时使用真实数据
 // 模拟数据
 const mockIssues = [
     {
@@ -37,7 +41,9 @@ const mockIssues = [
         user: { login: 'imoki' }, // 假设用户名为 imoki
         // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者"}'
         // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" }}'
-        body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" },"sortOrder": ["[博客_文章]关于我", "[博客_文章]人工智能在医疗领域的应用与挑战", "[博客_文章]Web 开发技术的前世今生", "[博客_文章]十大火爆的 CMS 系统推荐" ]}'
+        // body: '{"avatar": "https://avatars.kkgithub.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" },"sortOrder": ["[博客_文章]关于我", "[博客_文章]人工智能在医疗领域的应用与挑战", "[博客_文章]Web 开发技术的前世今生", "[博客_文章]十大火爆的 CMS 系统推荐" ]}'
+        body: '{"avatar": "https://avatars.github.com/u/78804251?v=4", "name": "imoki", "bio": "热爱技术分享的开发者", "articleImages": { "[博客_文章]Web 开发技术的前世今生": "https://img.loliapi.cn/i/pp/img86.webp", "[博客_文章]人工智能在医疗领域的应用与挑战": "https://img.loliapi.cn/i/pp/img51.webp", "[博客_文章]十大火爆的 CMS 系统推荐": "" },"sortOrder": ["[博客_文章]关于我", "[博客_文章]人工智能在医疗领域的应用与挑战", "[博客_文章]Web 开发技术的前世今生", "[博客_文章]十大火爆的 CMS 系统推荐" ]}'
+
     },
     {
         id: 5,
@@ -128,6 +134,32 @@ function greet(name) {
         user: { login: 'imoki' },
         body: '今天心情很不错 :smile:，希望每天都能像这样 :sunny:。'
     },
+    {
+        id: 12,
+        title: '[博客_评论]',
+        user: { login: 'imoki' },
+        body: JSON.stringify({
+            '[博客_文章]Web 开发技术的前世今生': [
+                {
+                    content: '这篇文章写得很详细，受益良多！',
+                    time: '2025-04-28 10:00:00',
+                    nickname: '张三'
+                }
+            ],
+            '[博客_文章]人工智能在医疗领域的应用与挑战': [
+                {
+                    content: '人工智能在医疗的应用前景确实广阔，期待更多突破。',
+                    time: '2025-04-27 14:30:00',
+                    nickname: '李四'
+                },
+                {
+                    content: '未来是人工智能',
+                    time: '2025-04-29 15:30:00',
+                    nickname: '王五'
+                }
+            ]
+        })
+    }
 ].filter(issue => issue.user && issue.user.login === OWNER);
 
 // 获取容器元素
@@ -383,6 +415,7 @@ function renderSummaries(issues) {
         // 截取前 指定 个字符作为概要
         const summaryText = issue.body.substring(0, ARTICLE_ABSTRACT_NUM) + '...';
         summaryContent.innerHTML = marked.parse(summaryText);
+        // summaryContent.innerHTML = summaryText;
 
         // 将标题和概要添加到文本容器
         textContainer.appendChild(titleElement);
@@ -417,6 +450,7 @@ function showDetail(issue) {
     // 创建文章内容元素
     const contentElement = document.createElement('div');
     contentElement.innerHTML = marked.parse(issue.body);
+    // contentElement.innerHTML = issue.body;
 
     // 创建返回按钮
     const backButton = document.createElement('button');
@@ -432,6 +466,80 @@ function showDetail(issue) {
     detailContainer.appendChild(backButton);
     detailContainer.appendChild(titleElement);
     detailContainer.appendChild(contentElement);
+
+    // 查找评论数据
+    const commentsIssue = mockIssues.find(issue => issue.title === COMMENT);
+    if (commentsIssue) {
+        try {
+            const commentsData = JSON.parse(commentsIssue.body);
+            const commentsForArticle = commentsData[issue.title] || [];
+
+            // 创建评论区容器
+            const commentsSection = document.createElement('div');
+            commentsSection.classList.add('comments-section');
+            commentsSection.innerHTML = '<h2>评论区</h2>';
+
+            // 遍历评论并添加到评论区
+            commentsForArticle.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.classList.add('comment');
+                commentElement.innerHTML = `
+                    <p><strong>${comment.nickname}</strong> 于 ${comment.time} 评论：</p>
+                    <p>${comment.content}</p>
+                `;
+                commentsSection.appendChild(commentElement);
+            });
+
+            // 添加评论输入表单
+            const commentForm = document.createElement('form');
+            commentForm.innerHTML = `
+                <input type="text" id="nickname" placeholder="请输入昵称" required>
+                <textarea id="comment-content" placeholder="请输入评论内容" required></textarea>
+                <button type="submit">提交评论</button>
+            `;
+
+            commentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nicknameInput = document.getElementById('nickname');
+                const contentInput = document.getElementById('comment-content');
+
+                const newComment = {
+                    content: contentInput.value,
+                    time: new Date().toISOString().replace('T', ' ').substr(0, 19),
+                    nickname: nicknameInput.value
+                };
+
+                // 更新模拟数据
+                if (!commentsData[issue.title]) {
+                    commentsData[issue.title] = [];
+                }
+                commentsData[issue.title].push(newComment);
+
+                // 更新评论区显示
+                const newCommentElement = document.createElement('div');
+                newCommentElement.classList.add('comment');
+                newCommentElement.innerHTML = `
+                    <p><strong>${newComment.nickname}</strong> 于 ${newComment.time} 评论：</p>
+                    <p>${newComment.content}</p>
+                `;
+                commentsSection.appendChild(newCommentElement);
+
+                // 更新模拟数据的 body
+                commentsIssue.body = JSON.stringify(commentsData);
+
+                // 清空表单
+                nicknameInput.value = '';
+                contentInput.value = '';
+            });
+
+            commentsSection.appendChild(commentForm);
+
+            // 将评论区添加到详情容器
+            detailContainer.appendChild(commentsSection);
+        } catch (error) {
+            console.error('解析评论数据出错:', error);
+        }
+    }
 }
 
 init();
