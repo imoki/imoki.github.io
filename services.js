@@ -30,7 +30,9 @@ var MiddleLayerConfigConsistency = false; //  是否需要修改中间层，true
 var MiddleLayerConfigMessage = {"name": "imoki", "avatar": "", "bio": "", "articleImages": {}}
 // 配置
 var sheetNameConfig = "配置"  // 配置表
-var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.kkgithub.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
+// var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.kkgithub.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
+var contentConfig = [["Github Token","个人名称", "个人头像", "个人简介", "一致性校验（自动生成）"], ["", "imoki", "https://avatars.github.com/u/78804251?v=4", "热爱技术分享的开发者", ""]]; // 数据表内容
+
 // 文章
 var sheetNameArticle = "文章"; // 存储表名称
 var contentArticle = [["标题", "内容" ,"封面（可不填）", "一致性校验（自动生成）" ,"发布状态（可不填，默认为发布）","类别（可不填）", "标签（可不填）"]]; // 数据表头
